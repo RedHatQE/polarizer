@@ -1,0 +1,17 @@
+2017-11-02 14:46:36,969 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-02 14:46:36,977 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-02 14:47:37,735 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-02 14:47:37,825 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Result of test: null
+2017-11-02 14:49:26,942 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-02 14:49:26,953 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-02 14:54:37,760 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-02 14:54:37,771 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-02 14:56:40,605 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-02 14:56:40,671 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Result of test: null
+2017-11-02 15:49:39,322 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-02 15:49:39,331 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-02 15:59:54,916 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-02 16:01:21,914 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-02 16:01:21,927 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-02 16:03:01,195 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-02 16:03:01,203 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
