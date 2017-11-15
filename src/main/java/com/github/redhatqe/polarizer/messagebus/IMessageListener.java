@@ -38,7 +38,7 @@ public interface IMessageListener {
      *
      * @return ObjectNode that is the parsed message
      */
-    static Supplier<Optional<ObjectNode>> getCIMessage(CIBusListener bl, String selector, String path) {
+    static Supplier<Optional<ObjectNode>> getCIMessage(CIBusListener bl, String selector) {
         return () -> {
             ObjectNode root = null;
             bl.logger.info(String.format("Using selector of %s", selector));

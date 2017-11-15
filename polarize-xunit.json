@@ -1,0 +1,38 @@
+{
+    "project": "PLATTP",
+    "servers": {
+        "polarion": {
+            "url": "https://polarion.server.com/endpoint",
+            "user": "your-team",
+            "password": "your-password"
+        }
+    },
+    "xunit": {
+        "testrun": {
+            "id": "",
+            "title": "Sean Toner Polarize TestRun",
+            "template-id": "sean toner test template",
+        },
+        "custom": {
+            "test-suite": {
+                "dry-run": false
+                "set-testrun-finished": true
+                "include-skipped": false
+            },
+            "properties": {
+                "variant": "The template id to use for test runs",
+                "arch": "x86_64",
+                "plannedin": "",
+                "jenkinsjobs": "Path to the jenkins job",
+                "notes": "arbitrary field for notes"
+            }
+        },
+        "endpoint": "/endpoint/for/xunit",
+        "selector": {
+            "name": "rhsm_qe",
+            "value": "xunit_importer"
+        },
+        "timeout": 300000,
+        "enabled": true
+    }
+}

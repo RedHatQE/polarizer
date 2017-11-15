@@ -33,45 +33,29 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
     private String topic;
     private Subject<ObjectNode> nodeSub;
     private Integer messageCount = 0;
-
-    public String publishDest;
     public CircularFifoQueue<MessageResult> messages;
 
 
     public CIBusListener() {
+        this(IMessageListener.defaultHandler(), ICIBus.getDefaultConfigPath());
+    }
+
+    public CIBusListener(MessageHandler hdlr) {
+        this(hdlr, ICIBus.getDefaultConfigPath());
+    }
+
+    public CIBusListener(MessageHandler hdlr, String path) {
         super();
         this.topic = TOPIC;
         this.uuid = UUID.randomUUID();
         this.clientID = POLARIZE_CLIENT_ID + "." + this.uuid;
-
-        this.configPath = ICIBus.getDefaultConfigPath();
-        String err = String.format("Could not find configuration file at %s", this.configPath);
-        this.brokerConfig = ICIBus.getConfigFromPath(BrokerConfig.class, this.configPath)
-                .orElseThrow(() -> new NoConfigFoundError(err));
+        this.configPath = path;
+        this.brokerConfig = ICIBus
+                .getConfigFromPath(BrokerConfig.class, this.configPath)
+                .orElseThrow(() -> new NoConfigFoundError(String.format("Could not find configuration file at %s", this.configPath)));
         this.broker = this.brokerConfig.getBrokers().get(this.brokerConfig.getDefaultBroker());
-
         this.messages = new CircularFifoQueue<>(20);
-        this.nodeSub = this.setupDefaultSubject(IMessageListener.defaultHandler());
-    }
-
-    public CIBusListener(MessageHandler hdlr) {
-        this();
         this.nodeSub = this.setupDefaultSubject(hdlr);
-    }
-
-    public CIBusListener(MessageHandler hdlr, String path) {
-        this(hdlr);
-        this.brokerConfig = ICIBus.getConfigFromPath(BrokerConfig.class, path).orElseThrow(() -> {
-            return new NoConfigFoundError(String.format("Could not find configuration file at %s", this.configPath));
-        });
-    }
-
-    public CIBusListener(MessageHandler hdlr, String name, String id, String url, String user, String pw,
-                         Long timeout, Integer max) {
-        this(hdlr);
-        this.clientID = id;
-        this.brokerConfig = new BrokerConfig(name, url, user, pw, timeout, max);
-        this.broker = this.brokerConfig.getBrokers().get(name);
     }
 
     public CIBusListener(MessageHandler hdlr, BrokerConfig cfg) {
@@ -79,9 +63,9 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         if (cfg != null)
             this.brokerConfig = cfg;
         else
-            this.brokerConfig = ICIBus.getConfigFromPath(BrokerConfig.class, this.configPath).orElseThrow(() -> {
-                return new NoConfigFoundError(String.format("Could not find brokerConfig file at %s", this.configPath));
-            });
+            this.brokerConfig = ICIBus
+                    .getConfigFromPath(BrokerConfig.class, this.configPath)
+                    .orElseThrow(() -> new NoConfigFoundError(String.format("Could not find brokerConfig file at %s", this.configPath)));
 
         this.broker = this.brokerConfig.getBrokers().get(this.brokerConfig.getDefaultBroker());
     }

@@ -1,6 +1,7 @@
 package com.github.redhatqe.polarizer.reflector;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
 import com.github.redhatqe.polarizer.configuration.data.Serializer;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.importer.testcase.Parameter;
@@ -32,16 +33,26 @@ public class Reflector {
     public Map<Testcase, Meta<TestDefinition>> testCaseToMeta = new HashMap<>();
     public Map<String,
                Map<String, IdParams>> mappingFile;
-    public TestCaseConfig config;
+    public TestCaseConfig tcConfig;
+    public BrokerConfig brokerConfig;
     private Map<String, List<Testcase>> tcMap = new HashMap<>();
     public Map<String,
                Map<String, Meta<TestDefinition>>> methToProjectDef;
     public Map<String, String> methodToDesc = new HashMap<>();
 
 
-    public Reflector(String cfgPath) {
+    /**
+     * Uses the default broker config file
+     * @param testcaseCfgPath
+     */
+    public Reflector(String testcaseCfgPath) {
+        this(testcaseCfgPath, BrokerConfig.getDefaultConfigPath());
+    }
+
+    public Reflector(String testcaseCfgPath, String brokerCfgPath) {
         try {
-            this.config = Serializer.fromYaml(TestCaseConfig.class, new File(cfgPath));
+            this.tcConfig = Serializer.fromYaml(TestCaseConfig.class, new File(testcaseCfgPath));
+            this.brokerConfig = Serializer.fromYaml(BrokerConfig.class, new File(brokerCfgPath));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +63,7 @@ public class Reflector {
         testsToClasses = new HashMap<>();
         testTypes = new HashSet<>(Arrays.asList("AcceptanceTests", "Tier1Tests", "Tier2Tests", "Tier3Tests"));
         testDefs = new ArrayList<>();
-        mappingFile = FileHelper.loadMapping(new File(config.getMapping()));
+        mappingFile = FileHelper.loadMapping(new File(tcConfig.getMapping()));
     }
 
     private <T> List<Meta<TestDefinition>> getTestDefsMetaData(Class<T> c) {
@@ -175,9 +186,8 @@ public class Reflector {
 
     public <T> void getAnnotations(Class<T> c) {
         List<MetaData> classMethods = this.getTestNGMetaData(c);
-        if(this.methods == null) {
+        if(this.methods == null)
             this.methods = classMethods;
-        }
         else
             this.methods.addAll(classMethods);
 
@@ -216,10 +226,15 @@ public class Reflector {
     }
 
     public void processTestDefs() {
-        File mapPath = new File(this.config.getMapping());
+        File mapPath = new File(this.tcConfig.getMapping());
         this.testDefs.forEach(td ->
-                TestDefinitionProcessor.processTC(td, this.mappingFile, this.testCaseToMeta, this.tcMap,
-                        mapPath, this.methodToDesc, this.config));
+                TestDefinitionProcessor.processTC( td
+                                                 , this.mappingFile
+                                                 , this.testCaseToMeta
+                                                 , this.tcMap
+                                                 , mapPath
+                                                 , this.methodToDesc
+                                                 , this.tcConfig));
     }
 
     Map<String, Map<String, Meta<TestDefinition>>> makeMethToProjectMeta() {
@@ -252,15 +267,11 @@ public class Reflector {
     }
 
     List<Optional<ObjectNode>> testcasesImporterRequest(File mapPath) {
-        String url = this.config.getServers().get("polarion").getUrl() + this.config.getTestcase().getEndpoint();
-        Boolean enabled = this.config.getTestcase().getEnabled();
         return TestDefinitionProcessor.tcImportRequest(this.tcMap
-                , // Meta<TestDefinition>
+                , methToProjectDef
                 , this.mappingFile
                 , mapPath
-                , this.config
-                , // TestCaseInfo
-                , enabled
-                , // path to BrokerConfig);
+                , this.tcConfig
+                , this.brokerConfig);
     }
 }

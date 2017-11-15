@@ -1,0 +1,21 @@
+{
+    "brokers": {
+        "ci": {
+            "url": "",
+            "user": "",
+            "password": "",
+            "messages": {
+                "timeout": 300000,
+                "maxMsgs": 2
+            },
+            "tls": {
+                "keystore-path": "/path/to/keystore.jks",
+                "truststore-path": "/path/to/truststore.jks",
+                "keystorekey-pw": "pw-of-pvtkey",
+                "keystore-pw": "pw-of-keystore",
+                "truststore-pw": "pw-of-truststore"
+            }
+        }
+    },
+    "defaultBroker": "ci"
+}

@@ -29,12 +29,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.jms.JMSException;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -325,6 +323,7 @@ public class TestDefinitionProcessor {
             msgs.add("This behavior may occur automatically in the future!!");
             msgs.add(hl);
             logger.warn("TODO: Return a JSON message of the auditfile");
+            logger.warn(msgs.stream().reduce("", (acc, n) -> acc + "\n" + n));
         }
 
         return tc;
@@ -510,7 +509,7 @@ public class TestDefinitionProcessor {
         writeMapFile(mapPath, mapFile);
     }
 
-    public static void checkParameterMismatch( Meta<TestDefinition> meta
+    private static void checkParameterMismatch( Meta<TestDefinition> meta
             , Map<String
             , Map<String, IdParams>> mapFile
             , IDType idtype) {
@@ -522,7 +521,7 @@ public class TestDefinitionProcessor {
         int paramSize = meta.params.size();
         if (methodToParams == null && paramSize == 0)
             return;
-        if (methodToParams == null && paramSize != 0) {
+        if (methodToParams == null) {
             String err = String.format("Method %s has %d args, but doesnt exist in mapfile", qualName, paramSize);
             throw new MismatchError(err);
         }
@@ -859,6 +858,79 @@ public class TestDefinitionProcessor {
         };
     }
 
+    public static class UpdateAnnotation {
+        public String qualName;
+        public String project;
+        public Boolean update;
+
+        public UpdateAnnotation(String q, String p, Boolean u) {
+            this.qualName = q;
+            this.project = p;
+            this.update = u;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Method name: %s, Project: %s, Update: %b", qualName, project, update);
+        }
+    }
+
+    /**
+     * This method does several things.
+     * - Check if there is a method annotated with @Test, but not @TestDefinition
+     * - Checks if a method's TestDefinition.update = true
+     * @return
+     */
+    public static Tuple<SortedSet<String>, List<UpdateAnnotation>>
+    auditMethods(Set<String> atTestMethods, Map<String, Map<String, Meta<TestDefinition>>> atTD) {
+        Set<String> atTDMethods = atTD.keySet();
+        // The set of methods which are annotated with @Test but not with @TestDefinition
+        Set<String> difference = atTestMethods.stream()
+                .filter(e -> !atTDMethods.contains(e))
+                .collect(Collectors.toSet());
+        SortedSet<String> ordered = new TreeSet<>(difference);
+
+        List<UpdateAnnotation> updateAnnotation = atTD.entrySet().stream()
+                .flatMap(es -> {
+                    String methname = es.getKey();
+                    return es.getValue().entrySet().stream()
+                            .map(es2 -> {
+                                String project = es2.getKey();
+                                Meta<TestDefinition> meta = es2.getValue();
+                                return new UpdateAnnotation(methname, project, meta.annotation.update());
+                            })
+                            .collect(Collectors.toList())
+                            .stream();
+                })
+                .filter(na -> na.update)
+                .collect(Collectors.toList());
+        return new Tuple<>(ordered, updateAnnotation);
+    }
+
+    public static JsonObject
+    writeAuditJson(JsonObject jo, Tuple<SortedSet<String>, List<UpdateAnnotation>> audit) throws IOException {
+        if (jo == null)
+            jo = new JsonObject();
+        Set<String> difference = audit.first;
+        List<UpdateAnnotation> updates = audit.second;
+
+        List<String> updateMsg = updates.stream()
+                .map(UpdateAnnotation::toString)
+                .collect(Collectors.toList());
+        jo.put("needs-testdefinition", new JsonArray(new ArrayList<>(difference)));
+        JsonArray ja = new JsonArray(updateMsg);
+        jo.put("update-is-true", ja);
+        return jo;
+    }
+
+    public static JsonObject writeAuditJson(JsonObject jo, String key, String value) {
+        if (jo == null) {
+            jo = new JsonObject();
+        }
+        jo.put(key, value);
+        return jo;
+    }
+
     /**
      * Sends a TestCase import request for each project
      *
@@ -867,8 +939,7 @@ public class TestDefinitionProcessor {
      * @param mapFile
      * @param mappingPath
      * @param config
-     * @param tci
-     * @param brokerCfgPath
+     * @param brokerCfg
      * @return
      */
     public static List<Optional<ObjectNode>>
@@ -877,8 +948,7 @@ public class TestDefinitionProcessor {
                     Map<String, Map<String, IdParams>> mapFile,
                     File mappingPath,
                     TestCaseConfig config,
-                    TestCaseInfo tci,
-                    String brokerCfgPath) {
+                    BrokerConfig brokerCfg) {
         List<Optional<ObjectNode>> maybeNodes = new ArrayList<>();
         if (testcaseMap.isEmpty() || !config.getTestcase().getEnabled()) {
             // TODO:  Need to be able to return the JsonObject
@@ -920,18 +990,20 @@ public class TestDefinitionProcessor {
                 try {
                     MessageHandler hdlr;
                     String projID = config.getProject();
-                    hdlr = TestDefinitionProcessor.testcaseImportHandler(methToProjectDef
-                            , projID, mapFile, mappingPath, tci);
+                    hdlr = TestDefinitionProcessor
+                            .testcaseImportHandler( methToProjectDef
+                                                  , projID
+                                                  , mapFile
+                                                  , mappingPath
+                                                  , config.getTestcase());
                     String url = config.getServers().get("polarion").getUrl() + config.getTestcase().getEndpoint();
-                    BrokerConfig cfg = Serializer.fromYaml(BrokerConfig.class, new File(brokerCfgPath));
-                    CIBusListener cbl = new CIBusListener(hdlr, cfg);
+                    CIBusListener cbl = new CIBusListener(hdlr, brokerCfg);
                     on = ImporterRequest.sendImportRequest( cbl
                                                           , url
                                                           , config.getServers().get("polarion").getUser()
                                                           , config.getServers().get("polarion").getPassword()
                                                           , testXml
-                                                          , selector
-                                                          , brokerCfgPath);
+                                                          , selector);
                     maybeNodes.add(on);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -940,9 +1012,6 @@ public class TestDefinitionProcessor {
                     e.printStackTrace();
                 } catch (JMSException e) {
                     logger.warn("TODO: Retry after a sleep");
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    logger.warn("FIXME: Could not find brokerConfig file");
                     e.printStackTrace();
                 }
             }

@@ -15,7 +15,7 @@ public enum ReporterConfigOpts implements IGetOpts {
     TESTRUN_TEMPLATE_ID("testrun-template-id", "The string of a template id.  For example, " +
             "--template-id=\"testing template\""),
     TESTRUN_GROUP_ID("testrun-group-id", "The value for the group id (not yet implemented)"),
-    PROJECT("project", "Sets the Polarion Project ID.  Relevant for polarize-config or xunit file"),
+    PROJECT("project", "Sets the Polarion Project ID.  Relevant for polarize-tcConfig or xunit file"),
     PLANNEDIN("plannedin", "PROPERTY: A string representing what plan time this test is for. Relevant to xunit.  " +
             "It is used like this --property plannedin=7_4_Pre-testing "),
     JENKINSJOBS("jenkinsjobs", "PROPERTY: An optional custom field for the jenkins job URL. Relevant to xunit. It is " +
@@ -41,7 +41,7 @@ public enum ReporterConfigOpts implements IGetOpts {
     TR_INCLUDE_SKIPPED("include-skipped", "When making an XUnit Import request, if set to true, also include any " +
             "testcases that were marked as skipped in the xunit file (these will show as Blocking in Polarion." +
             "Relevant to xunit"),
-    EDIT_CONFIG("edit-configuration", "When set to true, only sets values to the polarize-config file (given as the first " +
+    EDIT_CONFIG("edit-configuration", "When set to true, only sets values to the polarize-tcConfig file (given as the first " +
             "argument to the CLI). If false, then only read in the xunit file as given by --current-xunit, and create" +
             " a new modified version given the other CLI switches that will be written to --new-xunit"),
     XUNIT_IMPORTER_TIMEOUT("xunit-importer-timeout", "The time in miliseconds to wait for a message reply when " +
@@ -53,12 +53,12 @@ public enum ReporterConfigOpts implements IGetOpts {
     SERVER("server", "Takes a comma separated value of server-name,user-name,user-pw,[url].  The last field is " +
             "optional.  Can be called multiple times.  Eg --server polarion,stoner,mypass"),
     BASE_DIR("base-dir", "The absolute path, to where your project directory is.  The value here will replace " +
-            "wherever {BASEDIR} is in the polarize-config file.  Relevant to polarize-config"),
+            "wherever {BASEDIR} is in the polarize-tcConfig file.  Relevant to polarize-tcConfig"),
     MAPPING("mapping", "Absolute path to where the JSON file that mps methods to IDs will be looked up. Relevant to" +
             " both"),
     USERNAME("user-name", "Set the user name which will be used as the author of TestRuns or TestCases"),
     USERPASSWORD("user-password", "Set the password for the user who will be used as the author of TestRuns or TestCases"),
-    CONFIG("configuration", "Path of the polarize-config file to use"),
+    CONFIG("configuration", "Path of the polarize-tcConfig file to use"),
     HELP("help", "Prints help for all the options");
 
     private final String option;

@@ -87,7 +87,7 @@ public class Polarizer extends AbstractVerticle {
 
         // Get the contents of the upload
         // TODO: Each of these files needs a unique name since multiple clients might be making concurrent requests
-        // FIXME: The config file and (probably) the mapping.json are small enough to stream into a memory for speed
+        // FIXME: The tcConfig file and (probably) the mapping.json are small enough to stream into a memory for speed
         UUID id = UUID.randomUUID();
         req.uploadHandler(upload -> {
             String fName = upload.name();
@@ -110,11 +110,11 @@ public class Polarizer extends AbstractVerticle {
                         //this.completions.onNext(data);
                     });
                     break;
-                case "config":
-                    String configPath = "/tmp/" + "config.yaml";
+                case "tcConfig":
+                    String configPath = "/tmp/" + "tcConfig.yaml";
                     upload.streamToFileSystem(configPath);
                     upload.endHandler(v -> {
-                        logger.info("config file now fully uploaded");
+                        logger.info("tcConfig file now fully uploaded");
                         CompletionData data = new CompletionData("jar", configPath, id);
                         //this.completions.onNext(data);
                     });
@@ -125,7 +125,7 @@ public class Polarizer extends AbstractVerticle {
         });
 
         // TODO: Once everything is uploaded, we need to do the following:
-        // - Load the config file
+        // - Load the tcConfig file
         // - Load the mapping.json
         // - Call JarHelper on the downloaded jar
         req.endHandler(v -> {

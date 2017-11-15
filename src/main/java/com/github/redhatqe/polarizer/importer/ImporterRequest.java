@@ -201,10 +201,9 @@ public class ImporterRequest {
                       String user,
                       String pw,
                       File reportPath,
-                      String selector,
-                      String cfgPath)
+                      String selector)
             throws InterruptedException, ExecutionException, JMSException {
-        Supplier<Optional<ObjectNode>> sup = IMessageListener.getCIMessage(cbl, selector, cfgPath);
+        Supplier<Optional<ObjectNode>> sup = IMessageListener.getCIMessage(cbl, selector);
         CompletableFuture<Optional<ObjectNode>> future = CompletableFuture.supplyAsync(sup);
         // FIXME: While this async code works, it's possible for the calling thread to finish before the handler is
         // called.  Perhaps I can return the future, and the calling thread just joins()?
@@ -224,13 +223,19 @@ public class ImporterRequest {
     }
 
     public static Optional<MessageResult>
-    sendImportRequest(CIBusListener cbl, String selector, String user, String url, String pw, File reportPath) {
+    sendImportRequest2( CIBusListener cbl
+                     , String url
+                     , String user
+                     , String pw
+                     , File reportPath
+                     , String selector) {
         Optional<Connection> conn = cbl.tapIntoMessageBus(selector, cbl.createListener(cbl.messageParser()));
 
         logger.info("Making import request as user: " + user);
         CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
         System.out.println(resp.toString());
 
+        // FIXME: This will block.  We should use an Observable
         cbl.listenUntil(1);
         conn.ifPresent(c -> {
             try {
@@ -241,7 +246,7 @@ public class ImporterRequest {
         });
         MessageResult result = cbl.messages.remove();
         logger.info(String.format("The message response status is: %s", result.getStatus().name()));
-        return Optional.ofNullable(result);
+        return Optional.of(result);
     }
 
     /**

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +30,10 @@ public class BrokerConfig implements IConfig {
     public Map<String, Setter<String>> handlers = new HashMap<>();
     @JsonIgnore
     public Boolean showHelp = false;
+    @JsonIgnore
+    public static final String configBasePath = ".polarizer";
+    @JsonIgnore
+    public static final String defaultConfigFileName = "broker-config.yml";
 
     // =========================================================================
     // 3. Constructors go here.  Remember that there must be a no-arg constructor and you usually want a copy con
@@ -74,13 +79,17 @@ public class BrokerConfig implements IConfig {
     }
 
     //=============================================================================
-    // 5. Define any functions for parsing the value of a command line opt and setting the values
+    // 5. Define any other functions
     //=============================================================================
     public void addBroker(String name, Broker b) {
         this.brokers.put(name, b);
     }
 
+    public static String getDefaultConfigPath() {
+        return Paths.get(System.getProperty("user.home"), configBasePath, defaultConfigFileName).toString();
+    }
 
+    // FIXME: Replace this with a real test
     public static void main(String[] args) {
         BrokerConfig cfg = new BrokerConfig("ci", "ci-labs.eng.rdu2:61616", "stoner", "foo", 300000L, 1);
         BrokerConfig cfg2 = new BrokerConfig("ci", "ci-labs-foo", "stoner", "bar", 60000L, -1);

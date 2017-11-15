@@ -7,6 +7,7 @@ import com.github.redhatqe.polarizer.configuration.TestCaseInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,10 @@ public class TestCaseConfig extends BaseConfig {
     public static Logger logger = LogManager.getLogger("XUnitConfig");
     @JsonIgnore
     private String pathToJar;  // Path to the downloaded jar
+    @JsonIgnore
+    public static final String configBasePath = ".polarizer";
+    @JsonIgnore
+    public static final String defaultConfigFileName = "polarizer-testcase.yml";
 
     // =========================================================================
     // 3. Constructors go here.  Remember that there must be a no-arg constructor
@@ -104,5 +109,9 @@ public class TestCaseConfig extends BaseConfig {
 
     public void setPackages(List<String> packages) {
         this.packages = packages;
+    }
+
+    public static String getDefaultConfigPath() {
+        return Paths.get(System.getProperty("user.home"), configBasePath, defaultConfigFileName).toString();
     }
 }

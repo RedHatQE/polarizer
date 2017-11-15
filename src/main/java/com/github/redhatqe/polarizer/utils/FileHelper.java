@@ -11,8 +11,11 @@ import com.github.redhatqe.polarizer.reporter.IdParams;
 import org.apache.camel.util.StringHelper;
 
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -128,6 +131,28 @@ public class FileHelper implements IFileHelper {
         if(p.isPresent()) {
             Path path = p.get();
             System.out.println(path.toString());
+        }
+    }
+
+    static public void makeFile(String json, String filename) {
+        File file = new File(filename);
+
+        try {
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    throw new FileAlreadyExistsException("Could not delete old file");
+                }
+            } else {
+                file.createNewFile();
+            }
+
+            FileWriter fw = new FileWriter(file);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(json);
+            bw.close();
+        } catch (IOException ex) {
+            System.err.println(ex.getMessage());
         }
     }
 
