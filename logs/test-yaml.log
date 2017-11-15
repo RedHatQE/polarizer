@@ -15,3 +15,77 @@
 2017-11-02 16:01:21,927 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
 2017-11-02 16:03:01,195 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
 2017-11-02 16:03:01,203 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-03 07:58:12,093 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-03 07:58:12,097 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-03 07:58:26,523 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-03 07:58:26,530 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is %d
+2017-11-03 08:29:49,661 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-03 08:29:49,669 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-03 08:32:58,009 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-03 08:32:58,014 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-03 08:33:16,019 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-03 08:33:16,021 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 58862988
+2017-11-03 08:33:16,083 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
+2017-11-13 08:10:56,829 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 08:10:56,840 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 08:14:19,336 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-13 08:14:19,341 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 0
+2017-11-13 08:14:19,408 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
+2017-11-13 08:15:59,961 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-13 08:15:59,962 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 0
+2017-11-13 08:15:59,966 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
+2017-11-13 08:16:16,572 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
+2017-11-13 08:16:16,573 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 16344553
+2017-11-13 08:16:16,604 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
+2017-11-13 08:20:21,731 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 08:20:21,737 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 10:02:03,060 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:03:23,767 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:11:21,957 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:15:12,065 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:17:19,821 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:21:47,790 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:34:38,266 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:36:16,661 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:38:08,042 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:43:22,657 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:44:59,878 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:45:39,064 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:46:24,474 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+2017-11-13 10:47:58,288 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
+Class io.vertx.core.impl.JavaVerticleFactory can not access a member of class com.github.redhatqe.polarizer.http.Polarizer with modifiers ""
+2017-11-13 10:49:31,608 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 10:49:31,616 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 10:49:43,937 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 10:49:58,909 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 10:51:20,042 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 10:51:20,050 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 10:51:30,538 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 11:09:39,960 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 11:09:39,970 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 11:10:22,959 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 11:15:11,602 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 11:15:11,608 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 11:15:21,894 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 11:28:24,200 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 11:28:24,206 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 11:28:36,140 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 11:29:20,894 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 11:29:20,901 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 11:29:30,421 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 14:24:38,757 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 14:24:38,763 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 14:24:55,817 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 14:32:08,248 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 14:32:08,254 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 14:38:43,239 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 14:38:43,249 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 14:39:04,057 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 14:40:40,737 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 14:40:40,747 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 14:40:52,663 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 14:43:47,262 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
+2017-11-13 14:43:47,272 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
+2017-11-13 14:43:59,623 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
+2017-11-13 14:44:01,508 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] jar file now fully uploaded
+2017-11-13 14:44:01,574 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] mapping.json now fully uploaded

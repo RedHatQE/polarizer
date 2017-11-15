@@ -17,6 +17,6 @@ public class MainVerticle extends AbstractVerticle {
 
         Single<String> polarizerDeployer = vertx.rxDeployVerticle("com.github.redhatqe.polarizer.http.Polarizer");
         dep = polarizerDeployer.subscribe(succ -> logger.info("Polarizer was deployed"),
-                                          err -> logger.error("Failed to deploy Polarizer"));
+                                          err -> logger.error("Failed to deploy Polarizer\n" + err.getMessage()));
     }
 }

@@ -1,0 +1,18 @@
+---
+project: PLATTP
+author: stoner
+servers:
+  polarion:
+    url: https://polarion.server/endpoint
+    user: foo
+    password: password
+testcase:
+  endpoint: /endpoint/testcases
+  timeout: 300000
+  enabled: true
+  selector:
+    name: rhsm_qe
+    value: testcase_importer
+  title:
+    prefix: "RHSM-TC: "
+    suffix: ""

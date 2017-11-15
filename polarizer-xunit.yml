@@ -1,0 +1,29 @@
+---
+project: PLATTP
+servers:          # Optional:  This is already the default
+  polarion:
+    url: https://polarion.server.com/endpoint
+    user: your-team
+    password: your-password
+xunit:            # settings for the xunit importer
+  testrun:
+    id: ""        # optional unique id for testrun. Defaults to a timestamp (uniqueness by client)
+    title: "Sean Toner Polarize TestRun"
+    template-id: "sean toner test template"
+  custom:         # Sets the custom fields in the xml
+    test-suite:   # A list of key-value pairs.  The response properties
+      dry-run: false
+      set-testrun-finished: true
+      include-skipped: false
+    properties:           # a list of key value pairs where they key is a custom field
+      variant: ""         # The template id to use for test runs
+      arch: ""            #
+      plannedin: ""       # The plannedin phase
+      jenkinsjobs: ""     # Path to the jenkins job
+      notes: ""           # arbitrary field
+  endpoint: /endpoint/for/xunit
+  selector:       # the JMS selector <name>='<value>'
+    name: rhsm_qe
+    value: xunit_importer
+  timeout: 300000         # time in milliseconds to wait for reply message
+  enabled: true
