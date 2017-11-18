@@ -1,15 +1,22 @@
 package com.github.redhatqe.polarizer.reflector;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.TestDefAdapter;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestDefinitions;
+import com.github.redhatqe.polarizer.data.ProcessingInfo;
+import com.github.redhatqe.polarizer.messagebus.MessageResult;
+import com.github.redhatqe.polarizer.processor.MetaData;
 import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
-import com.github.redhatqe.polarizer.configuration.data.Serializer;
+import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.importer.testcase.Parameter;
 import com.github.redhatqe.polarizer.importer.testcase.Testcase;
-import com.github.redhatqe.polarizer.metadata.*;
-import com.github.redhatqe.polarizer.processor.TestDefinitionProcessor;
+import com.github.redhatqe.polarizer.processor.Meta;
+import com.github.redhatqe.polarizer.processor.MetaProcessor;
 import com.github.redhatqe.polarizer.reporter.IdParams;
 import com.github.redhatqe.polarizer.utils.FileHelper;
+import com.github.redhatqe.polarizer.utils.Tuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.annotations.Test;
@@ -39,20 +46,23 @@ public class Reflector {
     public Map<String,
                Map<String, Meta<TestDefinition>>> methToProjectDef;
     public Map<String, String> methodToDesc = new HashMap<>();
+    public File mapPath;
 
 
     /**
      * Uses the default broker config file
      * @param testcaseCfgPath
      */
-    public Reflector(String testcaseCfgPath) {
-        this(testcaseCfgPath, BrokerConfig.getDefaultConfigPath());
+    public Reflector(String testcaseCfgPath, File mapPath) {
+        this(testcaseCfgPath, BrokerConfig.getDefaultConfigPath(), mapPath);
     }
 
-    public Reflector(String testcaseCfgPath, String brokerCfgPath) {
+    public Reflector(String testcaseCfgPath, String brokerCfgPath, File mapPath) {
+        this.mapPath = mapPath;
         try {
             this.tcConfig = Serializer.fromYaml(TestCaseConfig.class, new File(testcaseCfgPath));
             this.brokerConfig = Serializer.fromYaml(BrokerConfig.class, new File(brokerCfgPath));
+            this.tcConfig.setMapping(mapPath.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -63,7 +73,7 @@ public class Reflector {
         testsToClasses = new HashMap<>();
         testTypes = new HashSet<>(Arrays.asList("AcceptanceTests", "Tier1Tests", "Tier2Tests", "Tier3Tests"));
         testDefs = new ArrayList<>();
-        mappingFile = FileHelper.loadMapping(new File(tcConfig.getMapping()));
+        mappingFile = FileHelper.loadMapping(this.mapPath);
     }
 
     private <T> List<Meta<TestDefinition>> getTestDefsMetaData(Class<T> c) {
@@ -93,7 +103,7 @@ public class Reflector {
             className = split[split.length - 1];
         }
 
-        // TODO: This doesnt get clojure param names. Might need to make Reflector and JarHelper
+        // TODO: This doesnt get clojure param names. Might need to make Reflector and MainReflector
         // in clojure, and get the args that way.
         java.lang.reflect.Parameter[] params = m.getParameters();
         List<Parameter> args = Arrays.stream(params)
@@ -134,7 +144,10 @@ public class Reflector {
         Method[] methods = c.getMethods();
         List<Method> meths = new ArrayList<>(Arrays.asList(methods));
         List<Method> filtered = meths.stream()
-                        .filter(m -> m.getAnnotation(TestDefinition.class) != null)
+                        .filter(m -> {
+                            TestDefinition td = m.getAnnotation(TestDefinition.class);
+                            return td != null;
+                        })
                         .collect(Collectors.toList());
         return filtered.stream().flatMap(m -> this.flatMapTestDefinitions(m, c))
                         .filter(meta -> !meta.className.isEmpty() && !meta.methName.isEmpty())
@@ -225,16 +238,45 @@ public class Reflector {
         }
     }
 
-    public void processTestDefs() {
-        File mapPath = new File(this.tcConfig.getMapping());
-        this.testDefs.forEach(td ->
-                TestDefinitionProcessor.processTC( td
-                                                 , this.mappingFile
-                                                 , this.testCaseToMeta
-                                                 , this.tcMap
-                                                 , mapPath
-                                                 , this.methodToDesc
-                                                 , this.tcConfig));
+    public List<ProcessingInfo> processTestDefs() {
+        File mapPath = this.mapPath;
+        List<Tuple<Boolean, ProcessingInfo>> coll = this.testDefs.stream().map(td ->
+                MetaProcessor.processTC( td
+                                     , this.mappingFile
+                                     , this.testCaseToMeta
+                                     , this.tcMap
+                                     , mapPath
+                                     , this.methodToDesc
+                                     , this.tcConfig))
+                .map(t3 -> new Tuple<>(t3.second, t3.third))
+                .collect(Collectors.toList());
+
+        Boolean updated = coll.stream().anyMatch(c -> c.first);
+        List<ProcessingInfo> results = coll.stream()
+                .filter(t -> t.second != null)
+                .map(t -> t.second)
+                .collect(Collectors.toList());
+        try {
+            Serializer.toJson(results, "/tmp/testing.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (updated && !this.tcConfig.getTestcase().getEnabled()) {
+            List<String> msgs = new ArrayList<>();
+            String hl = "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+            msgs.add(hl);
+            msgs.add("WARNING!");
+            msgs.add("The mapping file changed for at least one test");
+            msgs.add("However, the TestCase Importer is also disabled!");
+            msgs.add("This means that at runtime the TestRun will fail to import some of the methods since");
+            msgs.add("the TestCase in Polarion and what will be sent in the xunit file are no longer in accord.");
+            msgs.add("To correct this, set the testcase enabled to true in the configuration file.");
+            msgs.add("This behavior may occur automatically in the future!!");
+            msgs.add(hl);
+            logger.warn(msgs.stream().reduce("", (acc, n) -> acc + "\n" + n));
+        }
+        return results;
     }
 
     Map<String, Map<String, Meta<TestDefinition>>> makeMethToProjectMeta() {
@@ -266,8 +308,8 @@ public class Reflector {
         return adaps;
     }
 
-    List<Optional<ObjectNode>> testcasesImporterRequest(File mapPath) {
-        return TestDefinitionProcessor.tcImportRequest(this.tcMap
+    List<Optional<MessageResult>> testcasesImporterRequest(File mapPath) {
+        return MetaProcessor.tcImportRequest(this.tcMap
                 , methToProjectDef
                 , this.mappingFile
                 , mapPath

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.github.redhatqe.polarizer.configuration.data.Broker;
 import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
+import com.github.redhatqe.polarizer.configuration.data.TestCaseImportResult;
 import com.github.redhatqe.polarizer.exceptions.NoConfigFoundError;
 import com.github.redhatqe.polarizer.utils.ArgHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
@@ -29,11 +30,12 @@ import java.util.concurrent.ExecutionException;
  * A Class that provides functionality to listen to the CI Message Bus
  */
 public class CIBusListener extends CIBusClient implements ICIBus, IMessageListener {
-    Logger logger = LogManager.getLogger(CIBusListener.class.getName());
+    public Logger logger = LogManager.getLogger(CIBusListener.class.getName());
     private String topic;
     private Subject<ObjectNode> nodeSub;
     private Integer messageCount = 0;
     public CircularFifoQueue<MessageResult> messages;
+    private static final Integer SUBJECT_COMPLETED = -1;
 
 
     public CIBusListener() {
@@ -59,15 +61,18 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
     }
 
     public CIBusListener(MessageHandler hdlr, BrokerConfig cfg) {
-        this(hdlr);
+        super();
+        this.topic = TOPIC;
+        this.uuid = UUID.randomUUID();
+        this.clientID = POLARIZE_CLIENT_ID + "." + this.uuid;
+        this.configPath = "";
         if (cfg != null)
             this.brokerConfig = cfg;
         else
-            this.brokerConfig = ICIBus
-                    .getConfigFromPath(BrokerConfig.class, this.configPath)
-                    .orElseThrow(() -> new NoConfigFoundError(String.format("Could not find brokerConfig file at %s", this.configPath)));
-
+            throw new NoConfigFoundError("BrokerConfig can't be null");
         this.broker = this.brokerConfig.getBrokers().get(this.brokerConfig.getDefaultBroker());
+        this.messages = new CircularFifoQueue<>(20);
+        this.nodeSub = this.setupDefaultSubject(hdlr);
     }
 
 
@@ -78,15 +83,17 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
      * @return A Subject which will pass the Object node along
      */
     private Subject<ObjectNode> setupDefaultSubject(MessageHandler handler) {
+        // handler for onNext
         Consumer<ObjectNode> next = (ObjectNode node) -> {
             MessageResult result = handler.handle(node);
             // FIXME: I dont like storing state like this, but onNext doesn't return anything
             this.messageCount++;
             this.messages.add(result);
         };
+        // handler for onComplete
         Action act = () -> {
             logger.info("Stop listening!");
-            this.messageCount = 0;
+            this.messageCount = SUBJECT_COMPLETED;
         };
         // FIXME: use DI to figure out what kind of Subject to create, ie AsyncSubject, BehaviorSubject, etc
         Subject<ObjectNode> n = PublishSubject.create();
@@ -178,12 +185,8 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
 
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            String publishDest = String.format("Consumer.%s.%s", POLARIZE_CLIENT_ID + ".queue", TOPIC);
+            String publishDest = String.format("Consumer.%s.%s", this.clientID, TOPIC);
             Queue dest = session.createQueue(publishDest);
-
-            if (selector == null || selector.equals(""))
-                throw new Error("Must supply a value for the selector");
-
             consumer = session.createConsumer(dest, selector);
 
             // FIXME: We need to have some way to know when we see our message.
@@ -257,12 +260,13 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         Instant endtime = Instant.ofEpochSecond(end);
         int mod = 0;
         logger.info("Begin listening for message.  Times out at " + endtime.toString());
-        while(this.messageCount < count && Instant.now().getEpochSecond() < end) {
+        while(this.messageCount < count || Instant.now().getEpochSecond() < end) {
             try {
                 Thread.sleep(1000);
                 mod++;
+                String msg = "Current msg count = %d. Waiting on message for %d seconds...";
                 if (mod % 10 == 0)
-                    logger.info(String.format("Waiting on message for %d seconds...", mod));
+                    logger.info(String.format(msg, this.messageCount, mod));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -357,9 +361,6 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
      * @param args
      */
     public static void main(String... args) throws JMSException {
-        MessageHandler hdlr = IMessageListener.defaultHandler();
-        CIBusListener cbl = new CIBusListener(hdlr);
-
         Tuple<Optional<String>, Optional<String[]>> ht = ArgHelper.headAndTail(args);
         String cfgPath = ht.first.orElse(ICIBus.getDefaultConfigPath());
         CIBusListener bl = new CIBusListener(IMessageListener.defaultHandler(), cfgPath);

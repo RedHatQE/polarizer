@@ -1,6 +1,8 @@
 package com.github.redhatqe.polarizer.configuration.data;
 
 
+import com.github.redhatqe.polarizer.configuration.api.IGetOpts;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;

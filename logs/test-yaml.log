@@ -1,91 +1,50 @@
-2017-11-02 14:46:36,969 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-02 14:46:36,977 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-02 14:47:37,735 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-02 14:47:37,825 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Result of test: null
-2017-11-02 14:49:26,942 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-02 14:49:26,953 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-02 14:54:37,760 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-02 14:54:37,771 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-02 14:56:40,605 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-02 14:56:40,671 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Result of test: null
-2017-11-02 15:49:39,322 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-02 15:49:39,331 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-02 15:59:54,916 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-02 16:01:21,914 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-02 16:01:21,927 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-02 16:03:01,195 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-02 16:03:01,203 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-03 07:58:12,093 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-03 07:58:12,097 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-03 07:58:26,523 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-03 07:58:26,530 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is %d
-2017-11-03 08:29:49,661 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-03 08:29:49,669 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-03 08:32:58,009 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-03 08:32:58,014 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-03 08:33:16,019 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-03 08:33:16,021 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 58862988
-2017-11-03 08:33:16,083 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
-2017-11-13 08:10:56,829 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 08:10:56,840 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 08:14:19,336 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-13 08:14:19,341 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 0
-2017-11-13 08:14:19,408 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
-2017-11-13 08:15:59,961 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-13 08:15:59,962 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 0
-2017-11-13 08:15:59,966 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
-2017-11-13 08:16:16,572 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Just testing!
-2017-11-13 08:16:16,573 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Size of file is 16344553
-2017-11-13 08:16:16,604 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] File written
-2017-11-13 08:20:21,731 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 08:20:21,737 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 10:02:03,060 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:03:23,767 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:11:21,957 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:15:12,065 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:17:19,821 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:21:47,790 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:34:38,266 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:36:16,661 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:38:08,042 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:43:22,657 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:44:59,878 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:45:39,064 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:46:24,474 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-2017-11-13 10:47:58,288 ERROR c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Failed to deploy Polarizer
-Class io.vertx.core.impl.JavaVerticleFactory can not access a member of class com.github.redhatqe.polarizer.http.Polarizer with modifiers ""
-2017-11-13 10:49:31,608 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 10:49:31,616 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 10:49:43,937 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 10:49:58,909 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 10:51:20,042 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 10:51:20,050 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 10:51:30,538 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 11:09:39,960 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 11:09:39,970 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 11:10:22,959 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 11:15:11,602 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 11:15:11,608 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 11:15:21,894 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 11:28:24,200 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 11:28:24,206 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 11:28:36,140 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 11:29:20,894 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 11:29:20,901 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 11:29:30,421 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 14:24:38,757 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 14:24:38,763 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 14:24:55,817 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 14:32:08,248 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 14:32:08,254 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 14:38:43,239 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 14:38:43,249 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 14:39:04,057 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 14:40:40,737 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 14:40:40,747 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 14:40:52,663 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 14:43:47,262 INFO c.g.r.p.MainVerticle [vert.x-eventloop-thread-0] Polarizer was deployed
-2017-11-13 14:43:47,272 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Server is now listening
-2017-11-13 14:43:59,623 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] Testing testcaseMapper2!
-2017-11-13 14:44:01,508 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] jar file now fully uploaded
-2017-11-13 14:44:01,574 INFO c.g.r.p.h.Polarizer [vert.x-eventloop-thread-1] mapping.json now fully uploaded
+2017-11-17 13:52:03,896 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:52:03,905 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:52:03,906 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:52:03,906 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:52:03,908 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:52:03,910 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:53:18,927 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:53:18,935 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:53:18,936 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:53:18,937 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:53:18,939 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 13:53:18,939 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:40,486 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:40,493 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:40,495 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:40,496 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:40,496 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:40,498 INFO c.g.r.p.p.MetaProcessor [main] ID exists in the mapping file, but not in the annotation
+2017-11-17 15:17:45,362 INFO c.g.r.p.m.CIBusListener [main] Begin listening for message.  Times out at 2017-11-17T20:22:45Z
+2017-11-17 15:17:50,871 INFO c.g.r.p.m.CIBusListener [ActiveMQ Session Task-1] {
+  "import-testcases" : [ {
+    "name" : "com.github.redhatqe.rhsm.testpolarize.TestReq.testError",
+    "status" : "passed",
+    "id" : "PLATTP-11121"
+  }, {
+    "name" : "com.github.redhatqe.rhsm.testpolarize.TestReq.testTestDefinition",
+    "status" : "passed",
+    "id" : "PLATTP-11123"
+  }, {
+    "name" : "com.github.redhatqe.rhsm.testpolarize.TestPolarize.yetAnotherTestMethod",
+    "status" : "passed",
+    "id" : "PLATTP-11125"
+  } ],
+  "status" : "passed",
+  "log-url" : "http://ops-qe-logstash-2.rhev-ci-vms.eng.rdu2.redhat.com:9981/polarion/PLATTP/00000032.log"
+}
+2017-11-17 15:17:50,873 INFO c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] 
+2017-11-17 15:17:50,880 INFO c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] Testcase id for com.github.redhatqe.rhsm.testpolarize.TestReq.testError from message response = PLATTP-11121
+2017-11-17 15:17:50,880 DEBUG c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] Adding TestCase ID to the mapping file.  Editing map: com.github.redhatqe.rhsm.testpolarize.TestReq.testError -> {PLATTP: PLATTP-11121}
+2017-11-17 15:17:50,885 INFO c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] Testcase id for com.github.redhatqe.rhsm.testpolarize.TestReq.testTestDefinition from message response = PLATTP-11123
+2017-11-17 15:17:50,885 DEBUG c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] Adding TestCase ID to the mapping file.  Editing map: com.github.redhatqe.rhsm.testpolarize.TestReq.testTestDefinition -> {PLATTP: PLATTP-11123}
+2017-11-17 15:17:50,887 INFO c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] Testcase id for com.github.redhatqe.rhsm.testpolarize.TestPolarize.yetAnotherTestMethod from message response = PLATTP-11125
+2017-11-17 15:17:50,887 DEBUG c.g.r.p.p.MetaProcessor [ActiveMQ Session Task-1] Adding TestCase ID to the mapping file.  Editing map: com.github.redhatqe.rhsm.testpolarize.TestPolarize.yetAnotherTestMethod -> {PLATTP: PLATTP-11125}
+2017-11-17 15:17:55,363 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 10 seconds...
+2017-11-17 15:18:05,364 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 20 seconds...
+2017-11-17 15:18:15,366 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 30 seconds...
+2017-11-17 15:18:25,367 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 40 seconds...
+2017-11-17 15:18:35,369 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 50 seconds...
+2017-11-17 15:18:45,370 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 60 seconds...
+2017-11-17 15:18:55,371 INFO c.g.r.p.m.CIBusListener [main] Waiting on message for 70 seconds...

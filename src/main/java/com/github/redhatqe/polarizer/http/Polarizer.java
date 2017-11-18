@@ -57,7 +57,6 @@ public class Polarizer extends AbstractVerticle {
                 req.setExpectMultipart(true);
                 router.route("/testcase/mapper2").method(HttpMethod.POST).handler(this::testCaseMapper2);
                 router.post("/testcase/mapper/:name").handler(this::testCaseMapper);
-                //router.post("/testcase/mapper2").handler(this::testCaseMapper2);
                 router.post("/xunit/generator").handler(this::xunitGenerator);
                 router.post("/testcase/import").handler(this::testcaseImport);
 
@@ -127,7 +126,7 @@ public class Polarizer extends AbstractVerticle {
         // TODO: Once everything is uploaded, we need to do the following:
         // - Load the tcConfig file
         // - Load the mapping.json
-        // - Call JarHelper on the downloaded jar
+        // - Call MainReflector on the downloaded jar
         req.endHandler(v -> {
             JsonObject jo = new JsonObject();
             jo.put("result", "congratulations");

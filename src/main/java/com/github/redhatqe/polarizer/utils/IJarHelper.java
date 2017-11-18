@@ -40,6 +40,11 @@ public interface IJarHelper {
     static List<URL> convertToUrl(String paths) {
         ArrayList<String> jars = new ArrayList<>(Arrays.asList(paths.split(",")));
         List<URL> jarUrls = jars.stream()
+                .map(p -> {
+                    if (!p.startsWith("file://"))
+                        p = "file://" + p;
+                    return p;
+                })
                 .map(j -> {
                     URL url = null;
                     System.out.println(j);

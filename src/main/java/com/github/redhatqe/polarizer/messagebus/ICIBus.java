@@ -1,7 +1,7 @@
 package com.github.redhatqe.polarizer.messagebus;
 
 import com.github.redhatqe.polarizer.configuration.data.Broker;
-import com.github.redhatqe.polarizer.configuration.data.Serializer;
+import com.github.redhatqe.polarizer.data.Serializer;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.apache.logging.log4j.LogManager;

@@ -2,6 +2,9 @@ package com.github.redhatqe.polarizer.configuration.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.redhatqe.polarizer.configuration.api.IConfig;
+import com.github.redhatqe.polarizer.configuration.api.Setter;
+import com.github.redhatqe.polarizer.data.Serializer;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,8 +1,6 @@
 package com.github.redhatqe.polarizer.messagebus;
 
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.util.Optional;
 
 public class MessageResult {

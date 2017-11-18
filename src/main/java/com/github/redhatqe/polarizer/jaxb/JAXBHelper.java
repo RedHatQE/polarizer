@@ -1,9 +1,11 @@
 package com.github.redhatqe.polarizer.jaxb;
 
-import com.github.redhatqe.polarize.exceptions.XSDValidationError;
-import com.github.redhatqe.polarize.reporter.importer.testcase.Testcase;
-import com.github.redhatqe.polarize.reporter.importer.testcase.Testcases;
-import com.github.redhatqe.polarize.reporter.importer.xunit.Testsuites;
+
+
+import com.github.redhatqe.polarizer.exceptions.XSDValidationError;
+import com.github.redhatqe.polarizer.importer.testcase.Testcase;
+import com.github.redhatqe.polarizer.importer.testcase.Testcases;
+import com.github.redhatqe.polarizer.importer.xunit.Testsuites;
 
 import java.net.URL;
 

@@ -1,8 +1,7 @@
 package com.github.redhatqe.polarizer.jaxb;
 
-
-import com.github.redhatqe.polarize.exceptions.XMLDescriptonCreationError;
-import com.github.redhatqe.polarize.exceptions.XSDValidationError;
+import com.github.redhatqe.polarizer.exceptions.XMLDescriptonCreationError;
+import com.github.redhatqe.polarizer.exceptions.XSDValidationError;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;

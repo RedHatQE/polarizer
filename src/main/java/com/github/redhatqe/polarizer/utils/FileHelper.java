@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.redhatqe.polarizer.exceptions.InvalidArgumentType;
-import com.github.redhatqe.polarizer.metadata.Meta;
-import com.github.redhatqe.polarizer.metadata.QualifiedName;
-import com.github.redhatqe.polarizer.metadata.TestDefinition;
+import com.github.redhatqe.polarizer.processor.Meta;
 import com.github.redhatqe.polarizer.reporter.IdParams;
 import org.apache.camel.util.StringHelper;
 
@@ -16,8 +14,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 
 
@@ -65,75 +67,6 @@ public class FileHelper implements IFileHelper {
         return Paths.get(fullPath);
     }
 
-    /**
-     * Given a qualified name like com.github.redhat.qe.polarize.Foo.barMethod returns package, class and method
-     *
-     * @param path
-     * @return
-     */
-    public static QualifiedName getClassMethodFromDottedString(String path) throws Exception {
-        QualifiedName qual = new QualifiedName();
-        String[] dots = path.split("\\.");
-        if (dots.length < 3)
-            throw new Exception(String.format("%s not a valid dotted name. Must have package.class.methodname", path));
-
-        qual.methName = dots[dots.length - 1];
-        qual.className = dots[dots.length - 2];
-
-        String[] pkg = new String[dots.length - 2];
-        System.arraycopy(dots, 0, pkg, 0, pkg.length);
-        qual.packName = Arrays.stream(pkg).reduce("", (acc, n) -> acc + "." + n).substring(1);
-        return qual;
-    }
-
-    /**
-     * FIXME: this assumes the path is based on the class.method name but ignores if xmlPath is used in annotation
-     *
-     * Creates an xml path for a test method.  The path generated will take the form:</br>
-     * /{base}/{projID}/{qualname}
-     * </p>
-     * Normally, the base will come from the configuration file, extra will come from the class.methodName, and project will
-     * be determined based on some other factor like the project in a Meta object.
-     *
-     * @param base From the configuration file \<testcases-xml path={}\>
-     * @param extra a string representing an extra set of paths concatenated to base
-     * @param projID the project
-     * @return
-     */
-    public static Optional<Path> getXmlPath(String base, String extra, String projID) {
-        Path path = null;
-        try {
-            QualifiedName qual = FileHelper.getClassMethodFromDottedString(extra);
-            Meta<TestDefinition> meta = new Meta<>();
-            meta.project = projID;
-            meta.className = qual.className;
-            meta.packName = qual.packName;
-            meta.methName = qual.methName;
-            path = FileHelper.makeXmlPath(base, meta);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (path == null)
-            return Optional.empty();
-        else
-            return Optional.of(path);
-    }
-
-    public static void main(String[] args) {
-        try {
-            QualifiedName q = FileHelper.getClassMethodFromDottedString("rhsm.cli.tests.Foo.barMathod");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        Optional<Path> p = FileHelper.getXmlPath("/home/stoner/Projects/testpolarize/testcases",
-                                                 "com.github.redhatqe.rhsm.testpolarize.TestReq", "PLATTP");
-        if(p.isPresent()) {
-            Path path = p.get();
-            System.out.println(path.toString());
-        }
-    }
-
     static public void makeFile(String json, String filename) {
         File file = new File(filename);
 
@@ -154,6 +87,22 @@ public class FileHelper implements IFileHelper {
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
         }
+    }
+
+    static public File makeTempFile(String dir, String pre, String suff, String perm) {
+        if (perm == null)
+            perm = "rw-rw----";
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(perm);
+        FileAttribute<Set<PosixFilePermission>> fp = PosixFilePermissions.asFileAttribute(perms);
+
+        Path temp;
+        try {
+            temp = Files.createTempFile(Paths.get("/tmp"), "testcase-import", suff, fp);
+        } catch (IOException e) {
+            e.printStackTrace();
+            temp = new File(String.format("%s/tmp-%s%s", dir, pre, suff)).toPath();
+        }
+        return temp.toFile();
     }
 
     /**

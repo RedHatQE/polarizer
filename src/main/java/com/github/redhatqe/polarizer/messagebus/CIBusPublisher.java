@@ -1,12 +1,10 @@
 package com.github.redhatqe.polarizer.messagebus;
 
-import com.github.redhatqe.polarizer.configuration.composer.ICLIConfig;
 import com.github.redhatqe.polarizer.configuration.data.Broker;
 import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
 import com.github.redhatqe.polarizer.exceptions.NoConfigFoundError;
 import com.github.redhatqe.polarizer.utils.ArgHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
-import io.vertx.core.cli.annotations.CLIConfigurator;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
