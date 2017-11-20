@@ -21,12 +21,12 @@ Configuration:
         Pattern: "%d %p %C{1.} [%t] %m%n"
   Loggers:
     logger:
-      - name: com.github.redhatqe.polarizer.out
+      - name: com.github.redhatqe.polarizer
         level: info
         additivity: true
         AppenderRef:
           ref: STDOUT
-      - name: com.github.redhatqe.polarizer
+      - name: com.github.redhatqe.polarizer.file
         level: debug
         additivity: false
         AppenderRef:

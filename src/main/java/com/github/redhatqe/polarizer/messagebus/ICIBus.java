@@ -20,7 +20,7 @@ public interface ICIBus {
 
     static String getDefaultConfigPath() {
         String home = System.getProperty("user.home");
-        return FileSystems.getDefault().getPath(home, "/.polarizer/broker-config.yaml").toString();
+        return FileSystems.getDefault().getPath(home, "/.polarizer/broker-config.yml").toString();
     }
 
     static public <T> Optional<T> getConfigFromPath(Class<T> cfg, String path) {

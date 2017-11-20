@@ -308,7 +308,7 @@ public class Reflector {
         return adaps;
     }
 
-    List<Optional<MessageResult>> testcasesImporterRequest(File mapPath) {
+    List<Optional<MessageResult<ProcessingInfo>>> testcasesImporterRequest(File mapPath) {
         return MetaProcessor.tcImportRequest(this.tcMap
                 , methToProjectDef
                 , this.mappingFile

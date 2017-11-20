@@ -1,15 +1,11 @@
 package com.github.redhatqe.polarizer.reflector;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
-import com.github.redhatqe.polarizer.configuration.data.TestCaseImportResult;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.processor.Meta;
 import com.github.redhatqe.polarizer.processor.MetaData;
@@ -138,36 +134,6 @@ public class MainReflector implements IJarHelper {
         return refl;
     }
 
-    public static void addImportResultsToMapping( List<Optional<MessageResult>> results
-                                                , String mappingPath) {
-        List<ObjectNode> msgs = results.stream()
-                .map(r -> {
-                    if (r.isPresent()) {
-                        MessageResult mr = r.get();
-                        Optional<ObjectNode> node = mr.getNode();
-                        return node.orElse(null);
-                    }
-                    else
-                        return null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        //
-        msgs.stream()
-                .map(node -> {
-                    JsonNode root = node.get("root");
-                    ObjectMapper mapper = new ObjectMapper();
-                    return mapper.convertValue(root, TestCaseImportResult.class);
-                })
-                .flatMap(m -> m.getImportTestCases().stream())
-                .forEach(tc -> {
-                    String name = tc.getName();
-                    String id = tc.getId();
-                    String project = id.split("-")[0];
-                });
-    }
-
     public static JsonObject process(String jarPath, String tcCfgPath, String mappingPath) throws IOException {
         Reflector refl = reflect(jarPath, tcCfgPath, mappingPath);
 
@@ -175,7 +141,7 @@ public class MainReflector implements IJarHelper {
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
                     refl.methToProjectDef, refl.mappingFile);
         // TODO:  Need to do something with the importResults
-        List<Optional<MessageResult>> importResults = refl.testcasesImporterRequest(refl.mapPath);
+        List<Optional<MessageResult<ProcessingInfo>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
         JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
         MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);
 
@@ -198,6 +164,7 @@ public class MainReflector implements IJarHelper {
         return jo;
     }
 
+    // FIXME: Replace this with a test
     public static void main(String[] args) throws IOException {
         String jarpath = args[0];
         String configPath = args[1];

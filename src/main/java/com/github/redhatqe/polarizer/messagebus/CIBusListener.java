@@ -28,12 +28,12 @@ import java.util.concurrent.ExecutionException;
 /**
  * A Class that provides functionality to listen to the CI Message Bus
  */
-public class CIBusListener extends CIBusClient implements ICIBus, IMessageListener {
+public class CIBusListener<T> extends CIBusClient implements ICIBus, IMessageListener {
     public Logger logger = LogManager.getLogger(CIBusListener.class.getName());
     private String topic;
     private Subject<ObjectNode> nodeSub;
     private Integer messageCount = 0;
-    public CircularFifoQueue<MessageResult> messages;
+    public CircularFifoQueue<MessageResult<T>> messages;
     private static final Integer SUBJECT_COMPLETED = -1;
 
 
@@ -308,7 +308,7 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
      */
     public static void test(String[] args) throws ExecutionException, InterruptedException, JMSException {
         // FIXME: Use guice to make something that is an IMessageListener so we can mock it out
-        CIBusListener bl = new CIBusListener();
+        CIBusListener<DefaultResult> bl = new CIBusListener<>();
 
         Broker b = bl.brokerConfig.getBrokers().get("ci");
         b.setMessageMax(1);
@@ -323,7 +323,7 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         Optional<Connection> sconn = cbp.sendMessage(body, b, new JMSMessageOptions("stoner-polarize", props));
 
         bl.listenUntil(10000L);
-        MessageResult result = bl.messages.remove();
+        MessageResult<DefaultResult> result = bl.messages.remove();
         if (result.getNode().isPresent()) {
             ObjectNode node = result.getNode().get();
             ObjectMapper mapper = new ObjectMapper();

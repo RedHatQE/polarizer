@@ -6,12 +6,12 @@ import com.github.redhatqe.polarizer.data.ProcessingInfo;
 
 import java.util.Optional;
 
-public class MessageResult {
+public class MessageResult<T> {
     private ObjectNode node;
     private Status status;
     public String errorDetails = "";
     // FIXME:  Instead of ProcessingInfo, this should be a MessageResult<T>
-    public ProcessingInfo info;
+    public T info;
 
     public MessageResult() {
         this(null, null, null);
@@ -25,7 +25,7 @@ public class MessageResult {
         this(null, node, status);
     }
 
-    public MessageResult(ProcessingInfo t, ObjectNode node, Status status) {
+    public MessageResult(T t, ObjectNode node, Status status) {
         this.node = node;
         this.status = (node == null) ? Status.NO_MESSAGE : Status.SUCCESS;
         this.info = t;
@@ -53,6 +53,7 @@ public class MessageResult {
         EMPTY_MESSAGE,
         TIMED_OUT,
         NP_EXCEPTION,
+        WRONG_MESSAGE_FORMAT,
         JMS_EXCEPTION;
     }
 }

@@ -21,9 +21,9 @@ public interface IMessageListener {
      *
      * @return MessageHandler lambda
      */
-    static MessageHandler defaultHandler() {
+    static MessageHandler<DefaultResult> defaultHandler() {
         return (node) -> {
-            MessageResult result = new MessageResult(node);
+            MessageResult<DefaultResult> result = new MessageResult<>(node);
             return result;
         };
     }
@@ -38,6 +38,7 @@ public interface IMessageListener {
      *
      * @return ObjectNode that is the parsed message
      */
+    @Deprecated
     static Supplier<Optional<ObjectNode>> getCIMessage(CIBusListener bl, String selector) {
         return () -> {
             ObjectNode root = null;

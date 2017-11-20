@@ -1,9 +1,10 @@
 package com.github.redhatqe.polarizer.importer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarizer.ImporterRequest;
+import com.github.redhatqe.polarizer.configuration.ServerInfo;
 import com.github.redhatqe.polarizer.configuration.data.XUnitConfig;
 import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.exceptions.*;
@@ -12,16 +13,13 @@ import com.github.redhatqe.polarizer.importer.xunit.Error;
 import com.github.redhatqe.polarizer.jaxb.IJAXBHelper;
 import com.github.redhatqe.polarizer.jaxb.JAXBHelper;
 import com.github.redhatqe.polarizer.jaxb.JAXBReporter;
-import com.github.redhatqe.polarizer.messagebus.CIBusListener;
-import com.github.redhatqe.polarizer.messagebus.ICIBus;
-import com.github.redhatqe.polarizer.messagebus.MessageHandler;
-import com.github.redhatqe.polarizer.messagebus.MessageResult;
+import com.github.redhatqe.polarizer.messagebus.*;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.reporter.IdParams;
 import com.github.redhatqe.polarizer.utils.FileHelper;
+import com.github.redhatqe.polarizer.utils.JsonHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.*;
@@ -29,15 +27,12 @@ import org.testng.xml.XmlClass;
 import org.testng.xml.XmlSuite;
 import org.testng.xml.XmlTest;
 
-import javax.jms.JMSException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.github.redhatqe.polarizer.data.Serializer.*;
@@ -55,20 +50,6 @@ public class XUnitReporter implements IReporter {
     public static String configPath = System.getProperty("polarize.config");
     public static File cfgFile = null;
     private static XUnitConfig config;
-    static {
-        if (configPath != null)
-            cfgFile = new File(configPath);
-        if (!cfgFile.exists())
-            throw new NoConfigFoundError(String.format("Could not config file %s", configPath));
-
-        try {
-            config = fromYaml(XUnitConfig.class, cfgFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new ConfigurationError("Could not serialize yaml file");
-        }
-    }
-
     private final static File defaultPropertyFile =
             new File(System.getProperty("user.home") + "/.polarize/reporter.properties");
     private static List<String> failedSuites = new ArrayList<>();
@@ -80,12 +61,35 @@ public class XUnitReporter implements IReporter {
     public final static String polarionResponse = "polarion-response";
     private File bad = new File("/tmp/bad-tests.txt");
 
-    public static void setTestCaseConfig(String path) throws IOException {
+    public static void setXUnitConfig(String path) throws IOException {
         if (path == null || path.equals(""))
             return;
         File cfgFile = new File(path);
         XUnitReporter.config = Serializer.fromYaml(XUnitConfig.class, cfgFile);
         logger.info("Set XUnitReporter config to " + path);
+    }
+
+    public static XUnitConfig getConfig(String path) {
+        if (path != null) {
+            cfgFile = new File(path);
+        }
+        else if (configPath == null) {
+            Path phome = Paths.get(System.getProperty("user.home"), ".polarizer", "polarizer-xunit.yml");
+            cfgFile = new File(phome.toString());
+        }
+        else
+            cfgFile = new File(configPath);
+
+        if (!cfgFile.exists())
+            throw new NoConfigFoundError(String.format("Could not config file %s", configPath));
+
+        try {
+            config = fromYaml(XUnitConfig.class, cfgFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ConfigurationError("Could not serialize yaml file");
+        }
+        return config;
     }
 
     public static Properties getProperties() {
@@ -98,8 +102,6 @@ public class XUnitReporter implements IReporter {
                 try {
                     FileInputStream fis = new FileInputStream(fpath);
                     props.load(fis);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -109,8 +111,6 @@ public class XUnitReporter implements IReporter {
             try {
                 FileInputStream fis = new FileInputStream(XUnitReporter.defaultPropertyFile);
                 props.load(fis);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -166,6 +166,7 @@ public class XUnitReporter implements IReporter {
      */
     @Override
     public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
+        XUnitConfig config = XUnitReporter.getConfig(null);
         Testsuites tsuites = XUnitReporter.initTestSuiteInfo(config.getXunit().getSelector().getName());
         List<Testsuite> tsuite = tsuites.getTestsuite();
 
@@ -250,86 +251,20 @@ public class XUnitReporter implements IReporter {
         IJAXBHelper.marshaller(tsuites, reportPath, jaxb.getXSDFromResource(Testsuites.class));
     }
 
-    /**
-     * Makes an Xunit importer REST call
-     * </p>
-     * The actual response will come over the CI Message bus, not in the body of the http response.  Note that the
-     * pw is sent over basic auth and is therefore not encrypted.
-     *
-     * @param url The URL endpoint for the REST call
-     * @param user User name to authenticate as
-     * @param pw The password for the user
-     * @param reportPath path to where the xml file for uploading will be marshalled to
-     * @param tsuites the object that will be marshalled into XML
-     */
-    public static void sendXunitImportRequest(String url, String user, String pw, File reportPath, Testsuites tsuites) {
-        // Now that we've gone through the suites, let's marshall this into an XML file for the XUnit Importer
-        CloseableHttpResponse resp =
-                ImporterRequest.post(tsuites, Testsuites.class, url, reportPath.toString(), user, pw);
-        HttpEntity entity = resp.getEntity();
-        try {
-            BufferedReader bfr = new BufferedReader(new InputStreamReader(entity.getContent()));
-            System.out.println(bfr.lines().collect(Collectors.joining("\n")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println(resp.toString());
-    }
 
-    /**
-     * A function factory that returns a Consumer type function usable to determine success of XUnit import request
-     *
-     * @return a Consumer function
-     */
-    public static Consumer<Optional<ObjectNode>> xunitMessageHandler() {
-        return (node) -> {
-            if (!node.isPresent()) {
-                logger.warn("No ObjectNode received from the Message");
-            }
-            else {
-                JsonNode n = node.get();
-                if (n.size() == 0)
-                    return;
-                JsonNode root = n.get("root");
-                try {
-                    Boolean passed = root.get("status").textValue().equals("passed");
-                    if (passed) {
-                        logger.info("XUnit importer was successful");
-                        logger.info(root.get("testrun-url").textValue());
-                    }
-                    else {
-                        // Figure out which one failed
-                        if (root.has("import-results")) {
-                            JsonNode results = root.get("import-results");
-                            results.elements().forEachRemaining(element -> {
-                                if (element.has("status") && !element.get("status").textValue().equals("passed")) {
-                                    if (element.has("suite-name")) {
-                                        String suite = element.get("suite-name").textValue();
-                                        logger.info(suite + " failed to be updated");
-                                        XUnitReporter.failedSuites.add(suite);
-                                    }
-                                }
-                            });
-                        }
-                        else
-                            logger.error(root.get("message").asText());
-                    }
-                } catch (NullPointerException npe) {
-                    logger.error("Unknown format of message from bus");
-                }
-            }
-        };
-    }
-
-    public static MessageHandler xunitMsgHandler() {
+    public static MessageHandler<DefaultResult> xunitMsgHandler() {
         return (ObjectNode node) -> {
             JsonNode root = node.get("root");
-            MessageResult result = new MessageResult(node);
+            MessageResult<DefaultResult> result = new MessageResult<>(node);
+            result.info = new DefaultResult();
+
             try {
                 Boolean passed = root.get("status").textValue().equals("passed");
                 if (passed) {
                     logger.info("XUnit importer was successful");
                     logger.info(root.get("testrun-url").textValue());
+                    result.info.setText(JsonHelper.nodeToString(root));
+                    result.setStatus(MessageResult.Status.SUCCESS);
                 }
                 else {
                     // Figure out which one failed
@@ -360,6 +295,12 @@ public class XUnitReporter implements IReporter {
                 logger.error(err);
                 result.setStatus(MessageResult.Status.NP_EXCEPTION);
                 result.errorDetails = err;
+            } catch (JsonProcessingException e) {
+                String err = "Unable to deserialize JsonNode";
+                logger.error(err);
+                result.setStatus(MessageResult.Status.WRONG_MESSAGE_FORMAT);
+                result.errorDetails = err;
+                e.printStackTrace();
             }
             return result;
         };
@@ -587,16 +528,16 @@ public class XUnitReporter implements IReporter {
         Property projectID = XUnitReporter.createProperty("polarion-project-id", config.getProject());
         properties.add(projectID);
 
-        Map<String, String> xprops = config.getXunit().getCustom().getProperties();
+        Map<String, Boolean> xprops = config.getXunit().getCustom().getTestSuite();
         Property testRunFinished = XUnitReporter.createProperty("polarion-set-testrun-finished",
-                xprops.get("set-testrun-finished"));
+                xprops.get("set-testrun-finished").toString());
         properties.add(testRunFinished);
 
-        Property dryRun = XUnitReporter.createProperty("polarion-dry-run", xprops.get("dry-run"));
+        Property dryRun = XUnitReporter.createProperty("polarion-dry-run", xprops.get("dry-run").toString());
         properties.add(dryRun);
 
         Property includeSkipped = XUnitReporter.createProperty("polarion-include-skipped",
-                xprops.get("include-skipped"));
+                xprops.get("include-skipped").toString());
         properties.add(includeSkipped);
 
         Configurator cfg = XUnitReporter.createConditionalProperty(XUnitReporter.polarionResponse, responseName,
@@ -729,10 +670,11 @@ public class XUnitReporter implements IReporter {
      * @param selector
      * @throws IOException
      */
-    public static void request( String user
-                              , String pw
-                              , String xunitPath
-                              , String selector) throws IOException {
+    public static JsonObject
+    request( String xunitPath
+           , String user
+           , String pw
+           , String selector) throws IOException {
         String url = XUnitReporter.config.getServers().get("polarion").getUrl();
         url += XUnitReporter.config.getXunit().getEndpoint();
         if (selector == null) {
@@ -740,9 +682,11 @@ public class XUnitReporter implements IReporter {
                     XUnitReporter.config.getXunit().getSelector().getValue());
         }
 
-        if (user == null) {
+        if (user == null)
+            user = config.getServers().get("polarion").getUser();
+        if (pw == null)
+            pw = config.getServers().get("polarion").getPassword();
 
-        }
 
         // Make sure selector is in proper format
         if (!selector.contains("'")) {
@@ -764,22 +708,41 @@ public class XUnitReporter implements IReporter {
             else
                 throw new ImportRequestError(String.format("Could not download %s", xml.toString()));
         }
+        if (!xml.exists())
+            throw new ImportRequestError(String.format("Could not find xunit file %s", xunitPath));
 
         String defaultBrokerPath = ICIBus.getDefaultConfigPath();
         BrokerConfig brokerCfg = Serializer.fromYaml(BrokerConfig.class, new File(defaultBrokerPath));
 
-        CIBusListener cbl = new CIBusListener(XUnitReporter.xunitMsgHandler(), brokerCfg);
+        CIBusListener<DefaultResult> cbl = new CIBusListener<>(XUnitReporter.xunitMsgHandler(), brokerCfg);
         String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
-        Optional<MessageResult> maybeResult;
+        Optional<MessageResult<DefaultResult>> maybeResult;
         maybeResult = ImporterRequest.sendImportByTap( cbl
                                                      , url
-                                                     , config.getServers().get("polarion").getUser()
-                                                     , config.getServers().get("polarion").getPassword()
+                                                     , user
+                                                     , pw
                                                      , xml
                                                      , selector
                                                      , address);
-        MessageResult n = maybeResult.orElseThrow(() -> new MessageError("Did not get a response message from CI Bus"));
+        MessageResult<DefaultResult> n = maybeResult.orElseThrow(() -> new MessageError("Did not get a response message from CI Bus"));
+        JsonObject jo = new JsonObject();
+        if (n.getStatus() != MessageResult.Status.SUCCESS) {
+            jo.put("status", n.getStatus().toString());
+            jo.put("result", n.info.getText());
+            jo.put("errors", n.errorDetails);
+        }
 
-        // TODO:  Return a JsonObject
+        return jo;
+    }
+
+    // FIXME:  make a real test
+    public static void main(String[] args) throws IOException {
+        XUnitConfig config = XUnitReporter.getConfig(null);
+        ServerInfo polarion = config.getServers().get("polarion");
+        String user = polarion.getUser();
+        String pw = polarion.getPassword();
+        String xunitPath = args[0];
+
+        JsonObject jo = XUnitReporter.request(xunitPath, user, pw, null);
     }
 }

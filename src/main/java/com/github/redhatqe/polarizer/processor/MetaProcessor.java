@@ -1015,14 +1015,14 @@ public class MetaProcessor {
      * @param brokerCfg
      * @return
      */
-    public static List<Optional<MessageResult>>
+    public static List<Optional<MessageResult<ProcessingInfo>>>
     tcImportRequest(Map<String, List<Testcase>> testcaseMap,
                     Map<String, Map<String, Meta<TestDefinition>>> methToProjectDef,
                     Map<String, Map<String, IdParams>> mapFile,
                     File mappingPath,
                     TestCaseConfig config,
                     BrokerConfig brokerCfg) {
-        List<Optional<MessageResult>> maybeNodes = new ArrayList<>();
+        List<Optional<MessageResult<ProcessingInfo>>> maybeNodes = new ArrayList<>();
         if (testcaseMap.isEmpty() || !config.getTestcase().getEnabled()) {
             // TODO:  Need to be able to return the JsonObject
             if (!testcaseMap.isEmpty()) {
@@ -1045,7 +1045,7 @@ public class MetaProcessor {
         for(String project: testcaseMap.keySet()) {
             File testXml = FileHelper.makeTempFile("/tmp", "testcase-import", ".xml", null);
             Testcases tests = new Testcases();
-            Optional<MessageResult> on;
+            Optional<MessageResult<ProcessingInfo>> on;
             if (!MetaProcessor.initTestcases(selName, selVal, project, testXml, testcaseMap, tests)
                     .isPresent())
                 maybeNodes.add(Optional.empty());
@@ -1059,7 +1059,7 @@ public class MetaProcessor {
                                               , mappingPath
                                               , config.getTestcase());
                 String url = config.getServers().get("polarion").getUrl() + config.getTestcase().getEndpoint();
-                CIBusListener cbl = new CIBusListener(hdlr, brokerCfg);
+                CIBusListener<ProcessingInfo> cbl = new CIBusListener<>(hdlr, brokerCfg);
                 String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
                 on = ImporterRequest.sendImportByTap( cbl
                                                     , url

@@ -223,8 +223,8 @@ public class ImporterRequest {
         return maybeNode;
     }
 
-    public static Optional<MessageResult>
-    sendImportByTap( CIBusListener cbl
+    public static <T> Optional<MessageResult<T>>
+    sendImportByTap( CIBusListener<T> cbl
                    , String url
                    , String user
                    , String pw
@@ -232,14 +232,14 @@ public class ImporterRequest {
                    , String selector
                    , String address) {
         Optional<Connection> conn = cbl.tapIntoMessageBus(selector, cbl.createListener(cbl.messageParser()), address);
-        MessageResult msg;
+        MessageResult<T> msg;
 
         logger.info("Making import request as user: " + user);
         CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
         System.out.println(resp.toString());
         if (resp.getStatusLine().getStatusCode() != 200) {
             logger.error("Problem sending POST request");
-            msg = new MessageResult(null, MessageResult.Status.FAILED);
+            msg = new MessageResult<>(null, MessageResult.Status.FAILED);
             msg.errorDetails = resp.getStatusLine().getReasonPhrase();
         }
         else {
@@ -259,7 +259,7 @@ public class ImporterRequest {
             logger.info(String.format("The message response status is: %s", msg.getStatus().name()));
         }
         else
-            msg = new MessageResult(null, MessageResult.Status.NO_MESSAGE);
+            msg = new MessageResult<>(null, MessageResult.Status.NO_MESSAGE);
         return Optional.of(msg);
     }
 

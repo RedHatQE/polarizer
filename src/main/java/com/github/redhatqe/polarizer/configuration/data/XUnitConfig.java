@@ -20,7 +20,7 @@ public class XUnitConfig extends BaseConfig {
     // ==========================================================================
     // 2. Add all fields not belonging to the configuration here
     // ==========================================================================
-    @JsonIgnore
+    @JsonProperty
     private String mapping;
     @JsonIgnore
     public final String properties = "properties";
