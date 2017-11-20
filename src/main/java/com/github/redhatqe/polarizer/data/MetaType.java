@@ -19,7 +19,7 @@ public class MetaType {
     @JsonProperty
     public String project;
     @JsonProperty
-    public TestDefintionType annotation;
+    public TestDefinitionType annotation;
     @JsonProperty
     public List<Parameter> params;
     @JsonProperty(value="polarion-id")
@@ -39,6 +39,6 @@ public class MetaType {
         this.project = meta.project;
         this.polarionID = meta.polarionID;
         this.dirty = meta.dirty;
-        this.annotation = new TestDefintionType(meta.annotation);
+        this.annotation = new TestDefinitionType(meta.annotation);
     }
 }

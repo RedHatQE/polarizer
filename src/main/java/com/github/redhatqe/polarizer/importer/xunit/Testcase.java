@@ -9,7 +9,6 @@
 package com.github.redhatqe.polarizer.importer.xunit;
 
 import javax.xml.bind.annotation.*;
-import java.lang.Error;
 import java.util.ArrayList;
 import java.util.List;
 

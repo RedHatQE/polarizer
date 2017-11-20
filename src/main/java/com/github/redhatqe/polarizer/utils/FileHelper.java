@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.redhatqe.polarizer.exceptions.InvalidArgumentType;
 import com.github.redhatqe.polarizer.processor.Meta;
 import com.github.redhatqe.polarizer.reporter.IdParams;
+import io.vertx.reactivex.core.file.FileSystem;
 import org.apache.camel.util.StringHelper;
 
 
@@ -13,10 +14,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -103,6 +101,20 @@ public class FileHelper implements IFileHelper {
             temp = new File(String.format("%s/tmp-%s%s", dir, pre, suff)).toPath();
         }
         return temp.toFile();
+    }
+
+    public static boolean deleteFile(String path) {
+        File f = new File(path);
+        return !f.exists() || f.delete();
+    }
+
+    public static boolean deleteFile(File f) {
+        return !f.exists() || f.delete();
+    }
+
+    public static boolean deleteFile(Path path) {
+        File f = path.toFile();
+        return !f.exists() || f.delete();
     }
 
     /**

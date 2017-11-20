@@ -1,6 +1,6 @@
 package com.github.redhatqe.polarizer.messagebus;
 
-import com.github.redhatqe.polarizer.configuration.data.Broker;
+import com.github.redhatqe.polarizer.messagebus.config.Broker;
 import com.github.redhatqe.polarizer.data.Serializer;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSslConnectionFactory;
@@ -20,7 +20,7 @@ public interface ICIBus {
 
     static String getDefaultConfigPath() {
         String home = System.getProperty("user.home");
-        return FileSystems.getDefault().getPath(home, "/.polarize/broker-tcConfig.yaml").toString();
+        return FileSystems.getDefault().getPath(home, "/.polarizer/broker-config.yaml").toString();
     }
 
     static public <T> Optional<T> getConfigFromPath(Class<T> cfg, String path) {

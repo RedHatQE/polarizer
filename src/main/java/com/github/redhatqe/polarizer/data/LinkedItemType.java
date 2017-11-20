@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.LinkedItem;
 
-public class LinkedItemType {
+import java.lang.annotation.Annotation;
+
+
+public class LinkedItemType implements LinkedItem {
     @JsonProperty(value="workitem-id")
     private String workitemId;
     @JsonProperty
@@ -68,4 +71,33 @@ public class LinkedItemType {
         this.revision = revision;
     }
 
+    @Override
+    public String workitemId() {
+        return this.workitemId;
+    }
+
+    @Override
+    public boolean suspect() {
+        return this.suspect;
+    }
+
+    @Override
+    public DefTypes.Role role() {
+        return this.role;
+    }
+
+    @Override
+    public DefTypes.Project project() {
+        return this.project;
+    }
+
+    @Override
+    public String revision() {
+        return this.revision;
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return LinkedItemType.class;
+    }
 }

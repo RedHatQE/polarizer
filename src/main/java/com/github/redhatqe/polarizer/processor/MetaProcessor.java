@@ -7,11 +7,10 @@ import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarizer.configuration.TestCaseInfo;
-import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
+import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseImportResult;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
-import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.exceptions.*;
 import com.github.redhatqe.polarizer.ImporterRequest;
 import com.github.redhatqe.polarizer.importer.testcase.*;
@@ -22,18 +21,15 @@ import com.github.redhatqe.polarizer.messagebus.MessageHandler;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.reporter.IdParams;
 import com.github.redhatqe.polarizer.utils.*;
-import io.reactivex.Observable;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.jms.JMSException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -576,7 +572,7 @@ public class MetaProcessor {
                       File mapPath) {
         // TODO: Replace this by passing in a Subject
         List<String> badFuncs = new ArrayList<>();
-        ProcessingInfo pi = null;
+        ProcessingInfo pi = pi = new ProcessingInfo("Unprocessed", meta);
 
         Optional<String> maybePolarionID = meta.getPolarionIDFromTestcase();
         Optional<String> maybeMapFileID =
@@ -591,7 +587,8 @@ public class MetaProcessor {
         if (idtype == null)
             throw new MappingError("Error in IDType.fromNumber()");
 
-        String msg = "- %s for project %s: the testCaseID=\"\" in the @TestDefinition but the ID=%s in the %s.";
+        // format: {0} method, {1} projectID, {2} ann or map {3} ID {4} ann or map
+        String msg = "- %s for project %s: the ID=\"\" in the %s but is %s in the %s.";
         String qual = meta.qualifiedName;
         String project = meta.project;
         String pqual = meta.project + " -> " + qual;
@@ -606,21 +603,23 @@ public class MetaProcessor {
 
         // TODO: Instead of throwing an error on mismatch, perhaps we should auto-correct based on precedence
         // FIXME: When query ability is added, can run a check
-        String m = "Adding TestCase ID to the mapping file.  Editing map: %s -> {%s: %s}";
+        String m = "ANN: Adding TestCase ID to the mapping file.  Editing map: %s -> {%s: %s}";
         switch (idtype) {
             case NONE:
                 importType |= 0x01;
+                pi.setMessage("NONE: No ID in annotation or mapping file");
                 break;
             case ANN:
                 logger.info(String.format(m, meta.qualifiedName, meta.project, annId));
                 addToMapFile(mapFile, meta, annId, mapPath);
-                badFuncs.add(String.format(msg, qual, project, annId, "Map file"));
+                badFuncs.add(String.format(msg, qual, project, "mapping", annId, "annotation"));
+                pi.setMessage(m);
                 break;
             case MAP:
-                m = "ID exists in the mapping file, but not in the annotation";
+                m = "MAP: ID exists in the mapping file, but not in the annotation";
                 logger.info(String.format(m, meta.qualifiedName, meta.project, annId));
-                badFuncs.add(String.format(msg, qual, project, annId, "XML file"));
-                pi = new ProcessingInfo(m, meta);
+                badFuncs.add(String.format(msg, qual, project, "annotation", mapId, "mapping"));
+                pi.setMessage(m);
                 pi.getMeta().polarionID = mapId;
                 break;
             case ALL:
@@ -634,7 +633,10 @@ public class MetaProcessor {
                         String err = "%s id = %s did not match %s in %s";
                         logger.error(String.format(err, key, value, annId, pqual));
                     });
+                    if (!unmatched.isEmpty())
+                        pi.setMessage(String.format("Mismatched IDs for %s in %s", qual, project));
                 }
+                pi.setMessage("ALL: ID is in both annotation and mapping");
                 break;
             default:
                 logger.error("Should not get here");
@@ -1058,12 +1060,14 @@ public class MetaProcessor {
                                               , config.getTestcase());
                 String url = config.getServers().get("polarion").getUrl() + config.getTestcase().getEndpoint();
                 CIBusListener cbl = new CIBusListener(hdlr, brokerCfg);
+                String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
                 on = ImporterRequest.sendImportByTap( cbl
                                                     , url
                                                     , config.getServers().get("polarion").getUser()
                                                     , config.getServers().get("polarion").getPassword()
                                                     , testXml
-                                                    , selector);
+                                                    , selector
+                                                    , address);
                 maybeNodes.add(on);
             }
         }

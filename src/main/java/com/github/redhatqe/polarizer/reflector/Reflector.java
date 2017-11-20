@@ -7,7 +7,7 @@ import com.github.redhatqe.polarize.metadata.TestDefinitions;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.processor.MetaData;
-import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
+import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.importer.testcase.Parameter;

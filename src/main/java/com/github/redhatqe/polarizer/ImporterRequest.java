@@ -2,6 +2,7 @@ package com.github.redhatqe.polarizer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.jaxb.IJAXBHelper;
 import com.github.redhatqe.polarizer.jaxb.JAXBHelper;
 import com.github.redhatqe.polarizer.messagebus.CIBusListener;
@@ -228,14 +229,23 @@ public class ImporterRequest {
                    , String user
                    , String pw
                    , File reportPath
-                   , String selector) {
-        Optional<Connection> conn = cbl.tapIntoMessageBus(selector, cbl.createListener(cbl.messageParser()));
+                   , String selector
+                   , String address) {
+        Optional<Connection> conn = cbl.tapIntoMessageBus(selector, cbl.createListener(cbl.messageParser()), address);
+        MessageResult msg;
 
         logger.info("Making import request as user: " + user);
         CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
         System.out.println(resp.toString());
+        if (resp.getStatusLine().getStatusCode() != 200) {
+            logger.error("Problem sending POST request");
+            msg = new MessageResult(null, MessageResult.Status.FAILED);
+            msg.errorDetails = resp.getStatusLine().getReasonPhrase();
+        }
+        else {
+            cbl.listenUntil(1);
+        }
 
-        cbl.listenUntil(1);
         conn.ifPresent(c -> {
             try {
                 c.close();
@@ -243,12 +253,14 @@ public class ImporterRequest {
                 e.printStackTrace();
             }
         });
-        MessageResult result = new MessageResult(null, MessageResult.Status.NO_MESSAGE);
+
         if (!cbl.messages.isEmpty()) {
-            result = cbl.messages.remove();
-            logger.info(String.format("The message response status is: %s", result.getStatus().name()));
+            msg = cbl.messages.remove();
+            logger.info(String.format("The message response status is: %s", msg.getStatus().name()));
         }
-        return Optional.of(result);
+        else
+            msg = new MessageResult(null, MessageResult.Status.NO_MESSAGE);
+        return Optional.of(msg);
     }
 
     /**

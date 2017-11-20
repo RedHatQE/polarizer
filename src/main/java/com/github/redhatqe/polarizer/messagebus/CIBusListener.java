@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import com.github.redhatqe.polarizer.configuration.data.Broker;
-import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
-import com.github.redhatqe.polarizer.configuration.data.TestCaseImportResult;
+import com.github.redhatqe.polarizer.messagebus.config.Broker;
+import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.exceptions.NoConfigFoundError;
 import com.github.redhatqe.polarizer.utils.ArgHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
@@ -75,6 +74,7 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         this.nodeSub = this.setupDefaultSubject(hdlr);
     }
 
+    public String getClientID() { return this.clientID; }
 
     /**
      * Creates a Subject with a default set of onNext, onError, and onComplete handlers
@@ -172,7 +172,10 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
      * @return an Optional Connection to be used for closing the session
      */
     @Override
-    public Optional<Connection> tapIntoMessageBus(String selector, MessageListener listener) {
+    public Optional<Connection>
+    tapIntoMessageBus( String selector
+                     , MessageListener listener
+                     , String publishDest) {
         String brokerUrl = this.broker.getUrl();
         ActiveMQConnectionFactory factory = this.setupFactory(brokerUrl, this.broker);
         Connection connection = null;
@@ -184,8 +187,6 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
             connection.setExceptionListener(exc -> this.logger.error(exc.getMessage()));
 
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-            String publishDest = String.format("Consumer.%s.%s", this.clientID, TOPIC);
             Queue dest = session.createQueue(publishDest);
             consumer = session.createConsumer(dest, selector);
 
@@ -260,7 +261,9 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         Instant endtime = Instant.ofEpochSecond(end);
         int mod = 0;
         logger.info("Begin listening for message.  Times out at " + endtime.toString());
-        while(this.messageCount < count || Instant.now().getEpochSecond() < end) {
+        while(true) {
+            if (this.messageCount >= count || Instant.now().getEpochSecond() > end)
+                break;
             try {
                 Thread.sleep(1000);
                 mod++;
@@ -315,7 +318,8 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         props.put("rhsm_qe", "polarize_bus");
 
         String sel = "rhsm_qe='polarize_bus'";
-        Optional<Connection> rconn = bl.tapIntoMessageBus(sel, bl.createListener(bl.messageParser()));
+        String publishDest = String.format("Consumer.%s.%s", bl.clientID, TOPIC);
+        Optional<Connection> rconn = bl.tapIntoMessageBus(sel, bl.createListener(bl.messageParser()), publishDest);
         Optional<Connection> sconn = cbp.sendMessage(body, b, new JMSMessageOptions("stoner-polarize", props));
 
         bl.listenUntil(10000L);
@@ -355,26 +359,6 @@ public class CIBusListener extends CIBusClient implements ICIBus, IMessageListen
         });
     }
 
-    /**
-     * This is an asynchronous single-threaded way of listening for messages.  It uses tapIntoMessageBus to supply a
-     * MessageListener.  Each time the listener is called, it will call onNext to the Subject, pushing an ObjectNode
-     * @param args
-     */
-    public static void main(String... args) throws JMSException {
-        Tuple<Optional<String>, Optional<String[]>> ht = ArgHelper.headAndTail(args);
-        String cfgPath = ht.first.orElse(ICIBus.getDefaultConfigPath());
-        CIBusListener bl = new CIBusListener(IMessageListener.defaultHandler(), cfgPath);
-        String selector = ht.second.orElseGet(() -> new String[]{"polarize_bus=\"testing\""})[0];
-
-        Optional<Connection> res = bl.tapIntoMessageBus(selector, bl.createListener(bl.messageParser()));
-
-        // Spin in a loop here.  We will stop once we get the max number of messages as specified from the broker
-        // setting, or the timeout has been exceeded.  Sleep every second so we dont kill CPU usage.
-        bl.listenUntil(30000L);
-
-        if (res.isPresent())
-            res.get().close();
-    }
 
     public static void mainTest(String[] args) {
         try {

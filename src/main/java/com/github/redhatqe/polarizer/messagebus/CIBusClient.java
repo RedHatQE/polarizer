@@ -1,8 +1,8 @@
 package com.github.redhatqe.polarizer.messagebus;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.redhatqe.polarizer.configuration.data.Broker;
-import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
+import com.github.redhatqe.polarizer.messagebus.config.Broker;
+import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import io.reactivex.subjects.Subject;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 

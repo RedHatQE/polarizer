@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestType;
 
-public class TestTypeType {
+import java.lang.annotation.Annotation;
+
+public class TestTypeType implements TestType {
     @JsonProperty
     private DefTypes.TestTypes testtype;
     @JsonProperty
@@ -44,5 +46,25 @@ public class TestTypeType {
 
     public void setSubtype2(DefTypes.Subtypes subtype2) {
         this.subtype2 = subtype2;
+    }
+
+    @Override
+    public DefTypes.TestTypes testtype() {
+        return this.testtype;
+    }
+
+    @Override
+    public DefTypes.Subtypes subtype1() {
+        return this.subtype1;
+    }
+
+    @Override
+    public DefTypes.Subtypes subtype2() {
+        return this.subtype2;
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return TestTypeType.class;
     }
 }

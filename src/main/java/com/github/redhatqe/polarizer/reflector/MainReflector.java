@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
+import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
@@ -174,6 +174,7 @@ public class MainReflector implements IJarHelper {
         if (!refl.mapPath.exists())
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
                     refl.methToProjectDef, refl.mappingFile);
+        // TODO:  Need to do something with the importResults
         List<Optional<MessageResult>> importResults = refl.testcasesImporterRequest(refl.mapPath);
         JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
         MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);

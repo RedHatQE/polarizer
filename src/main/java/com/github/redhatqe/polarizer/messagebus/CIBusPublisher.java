@@ -1,7 +1,7 @@
 package com.github.redhatqe.polarizer.messagebus;
 
-import com.github.redhatqe.polarizer.configuration.data.Broker;
-import com.github.redhatqe.polarizer.configuration.data.BrokerConfig;
+import com.github.redhatqe.polarizer.messagebus.config.Broker;
+import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.exceptions.NoConfigFoundError;
 import com.github.redhatqe.polarizer.utils.ArgHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;

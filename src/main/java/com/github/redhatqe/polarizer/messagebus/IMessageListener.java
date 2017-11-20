@@ -71,7 +71,7 @@ public interface IMessageListener {
 
     Optional<Tuple<Connection, Message>> waitForMessage(String selector);
 
-    Optional<Connection> tapIntoMessageBus(String selector, MessageListener listener);
+    Optional<Connection> tapIntoMessageBus(String selector, MessageListener listener, String address);
 
     ObjectNode parseMessage(Message msg) throws ExecutionException, InterruptedException, JMSException;
 }

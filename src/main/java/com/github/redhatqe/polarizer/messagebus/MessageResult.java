@@ -1,26 +1,34 @@
 package com.github.redhatqe.polarizer.messagebus;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.redhatqe.polarizer.data.ProcessingInfo;
+
+
 import java.util.Optional;
 
 public class MessageResult {
     private ObjectNode node;
     private Status status;
     public String errorDetails = "";
+    // FIXME:  Instead of ProcessingInfo, this should be a MessageResult<T>
+    public ProcessingInfo info;
 
     public MessageResult() {
-        this.status = Status.PENDING;
-        this.node = null;
+        this(null, null, null);
     }
 
     public MessageResult(ObjectNode node) {
-        this.node = node;
-        this.status = (node == null) ? Status.NO_MESSAGE : Status.SUCCESS;
+        this(null, node, null);
     }
 
     public MessageResult(ObjectNode node, Status status) {
+        this(null, node, status);
+    }
+
+    public MessageResult(ProcessingInfo t, ObjectNode node, Status status) {
         this.node = node;
-        this.status = status;
+        this.status = (node == null) ? Status.NO_MESSAGE : Status.SUCCESS;
+        this.info = t;
     }
 
     public Optional<ObjectNode> getNode() {
