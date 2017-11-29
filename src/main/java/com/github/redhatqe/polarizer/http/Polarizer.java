@@ -1,6 +1,10 @@
 package com.github.redhatqe.polarizer.http;
 
+import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.observables.GroupedObservable;
 import io.reactivex.subjects.BehaviorSubject;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -15,7 +19,7 @@ import io.vertx.reactivex.ext.web.handler.BodyHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -27,27 +31,37 @@ public class Polarizer extends AbstractVerticle {
     private Disposable serverDisp;
     private BehaviorSubject<CompletionData> completions;
 
-    class CompletionData {
-        String type;
-        String result;
-        final UUID id;
+    /**
+     *
+     * @return
+     */
+    private Consumer<? super CompletionData> nextCompletion() {
+        return cd -> {
 
-        CompletionData(UUID id) {
-            this.type = "";
-            this.result = "";
-            this.id = id;
-        }
-
-        CompletionData(String t, String r, UUID id) {
-            this.type = t;
-            this.result = r;
-            this.id = id;
-        }
+        };
     }
 
+    private Consumer<? super Throwable> errCompletion() {
+        return err -> {
+
+        };
+    }
+
+    private Action compCompletion() {
+        return () -> {
+
+        };
+    }
 
     public void start() {
         this.completions = BehaviorSubject.create();
+        Observable<List<GroupedObservable<UUID, CompletionData>>> grouped;
+        grouped = this.completions.groupBy(CompletionData::getId).buffer(3);
+        // reduce
+        grouped.map( g -> {
+          return null;
+        });
+
         EventBus bus = vertx.eventBus();
         HttpServer server = vertx.createHttpServer();
         Router router = Router.router(vertx);
@@ -55,8 +69,7 @@ public class Polarizer extends AbstractVerticle {
         int portNumber = config().getInteger(CONFIG_HTTP_SERVER_PORT, 8080);
         server.requestHandler(req -> {
                 req.setExpectMultipart(true);
-                router.route("/testcase/mapper2").method(HttpMethod.POST).handler(this::testCaseMapper2);
-                router.post("/testcase/mapper/:name").handler(this::testCaseMapper);
+                router.route("/testcase/mapper").method(HttpMethod.POST).handler(this::testCaseMapper);
                 router.post("/xunit/generator").handler(this::xunitGenerator);
                 router.post("/testcase/import").handler(this::testcaseImport);
 
@@ -78,15 +91,20 @@ public class Polarizer extends AbstractVerticle {
      *
      * The body of the routing context will contain:
      *
-     * @param ctx
+     * @param ctx context supplied by server
      */
-    public void testCaseMapper2(RoutingContext ctx) {
+    private void testCaseMapper(RoutingContext ctx) {
         logger.info("Testing testcaseMapper2!");
         HttpServerRequest req = ctx.request();
 
-        // Get the contents of the upload
-        // TODO: Each of these files needs a unique name since multiple clients might be making concurrent requests
-        // FIXME: The tcConfig file and (probably) the mapping.json are small enough to stream into a memory for speed
+        /*
+         * Get the contents of the upload
+         * TODO: Each of these files needs a unique name since multiple clients might be making concurrent requests
+         * FIXME: The tcConfig file and (probably) the mapping.json are small enough to stream into a memory for speed
+         *
+         * As each part is uploaded send off the completion data to a processing stream.  We use the UUID as a filter
+         * so we can buffer up the three pieces together
+         */
         UUID id = UUID.randomUUID();
         req.uploadHandler(upload -> {
             String fName = upload.name();
@@ -96,8 +114,8 @@ public class Polarizer extends AbstractVerticle {
                     upload.streamToFileSystem(path);
                     upload.endHandler(v -> {
                         logger.info("mapping.json now fully uploaded");
-                        CompletionData data = new CompletionData("mapping", path, id);
-                        //this.completions.onNext(data);
+                        CompletionData<String> data = new CompletionData<>("mapping", path, id);
+                        this.completions.onNext(data);
                     });
                     break;
                 case "jar":
@@ -105,17 +123,18 @@ public class Polarizer extends AbstractVerticle {
                     upload.streamToFileSystem(jarpath);
                     upload.endHandler(v -> {
                         logger.info("jar file now fully uploaded");
-                        CompletionData data = new CompletionData("jar", jarpath, id);
-                        //this.completions.onNext(data);
+                        CompletionData<String> data = new CompletionData<>("jar", jarpath, id);
+                        this.completions.onNext(data);
                     });
                     break;
-                case "tcConfig":
-                    String configPath = "/tmp/" + "tcConfig.yaml";
+                case "testcase":
+                    String configPath = "/tmp/" + "tcArgs.yaml";
                     upload.streamToFileSystem(configPath);
+                    // Convert the uploaded file to the args 
                     upload.endHandler(v -> {
                         logger.info("tcConfig file now fully uploaded");
-                        CompletionData data = new CompletionData("jar", configPath, id);
-                        //this.completions.onNext(data);
+                        CompletionData<String> data = new CompletionData<>("jar", configPath, id);
+                        this.completions.onNext(data);
                     });
                     break;
                 default:
@@ -134,25 +153,6 @@ public class Polarizer extends AbstractVerticle {
         });
     }
 
-    public void testCaseMapper(RoutingContext ctx) {
-        logger.info("Just testing!");
-        //String test = ctx.getBodyAsJson().getString("hello");
-        //logger.info(String.format("Result of test: %s", test));
-
-        // Get the contents of the upload
-        String fileName = ctx.request().getParam("name");
-
-        Buffer body = ctx.getBody();
-        this.bufferToJar(body, fileName);
-
-        Boolean exists = Paths.get(UPLOAD_DIR, fileName).toFile().exists();
-        JsonObject jo = new JsonObject();
-        jo.put("result", "congratulations");
-        jo.put("file-exists", exists);
-
-        ctx.response().end(jo.encode());
-    }
-
 
     /**
      * This method will generate an XML xunit file compatible with the XUnit Importer
@@ -162,23 +162,23 @@ public class Polarizer extends AbstractVerticle {
      * - a JSON dict supplying extra parameters
      * - a mapping.json file
      *
-     * @param rc
+     * @param rc context passed by server
      */
-    public void xunitGenerator(RoutingContext rc) {
+    private void xunitGenerator(RoutingContext rc) {
 
     }
 
     /**
      *
-     * @param rc
+     * @param rc context passed by server
      */
-    public void testcaseImport(RoutingContext rc) {
+    private void testcaseImport(RoutingContext rc) {
 
     }
 
     /**
      *
-     * @param rc
+     * @param rc context passed by server
      */
     public void xunitImport(RoutingContext rc) {
 

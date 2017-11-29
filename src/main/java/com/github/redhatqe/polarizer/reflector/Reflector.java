@@ -31,33 +31,42 @@ import java.util.stream.Stream;
 
 
 public class Reflector {
-    public HashMap<String, List<MetaData>> testsToClasses;
-    public List<MetaData> methods;
-    public List<Meta<TestDefinition>> testDefs;
-    public List<Meta<TestDefAdapter>> testDefAdapters;
+    private HashMap<String, List<MetaData>> testsToClasses;
+    List<MetaData> methods;
+    List<Meta<TestDefinition>> testDefs;
+    List<Meta<TestDefAdapter>> testDefAdapters;
     private Set<String> testTypes;
     private static Logger logger = LogManager.getLogger(Reflector.class.getSimpleName());
-    public Map<Testcase, Meta<TestDefinition>> testCaseToMeta = new HashMap<>();
-    public Map<String,
+    private Map<Testcase, Meta<TestDefinition>> testCaseToMeta = new HashMap<>();
+    Map<String,
                Map<String, IdParams>> mappingFile;
-    public TestCaseConfig tcConfig;
-    public BrokerConfig brokerConfig;
+    private TestCaseConfig tcConfig;
+    private BrokerConfig brokerConfig;
     private Map<String, List<Testcase>> tcMap = new HashMap<>();
-    public Map<String,
+    Map<String,
                Map<String, Meta<TestDefinition>>> methToProjectDef;
-    public Map<String, String> methodToDesc = new HashMap<>();
-    public File mapPath;
+    private Map<String, String> methodToDesc = new HashMap<>();
+    File mapPath;
 
 
     /**
-     * Uses the default broker config file
-     * @param testcaseCfgPath
+     * Uses default broker config
+     *
+     * @param testcaseCfgPath path to polarizer-config.yml
+     * @param mapPath path to mapping.json
      */
     public Reflector(String testcaseCfgPath, File mapPath) {
         this(testcaseCfgPath, BrokerConfig.getDefaultConfigPath(), mapPath);
     }
 
-    public Reflector(String testcaseCfgPath, String brokerCfgPath, File mapPath) {
+    /**
+     * Main constructor for the reflector.  Other constructors should delegate to this one with defaults
+     *
+     * @param testcaseCfgPath path to the polarizer-testcase.yml
+     * @param brokerCfgPath path to the broker-config.yml
+     * @param mapPath path to the mapping.json
+     */
+    Reflector(String testcaseCfgPath, String brokerCfgPath, File mapPath) {
         this.mapPath = mapPath;
         try {
             this.tcConfig = Serializer.fromYaml(TestCaseConfig.class, new File(testcaseCfgPath));
@@ -136,9 +145,9 @@ public class Reflector {
     /**
      * This is the equivalent of  TestDefinitionProcess.makeMetaFromTestDefinition
      *
-     * @param c
-     * @param <T>
-     * @return
+     * @param c the class from which we are getting any TestDefinition metadata from
+     * @param <T> parameter of the class (eg would pass in Foo.class)
+     * @return List of Meta\<Definition\>
      */
     private <T> List<Meta<TestDefinition>> getTestDefMetaData(Class<T> c) {
         Method[] methods = c.getMethods();
@@ -157,9 +166,9 @@ public class Reflector {
     /**
      * Gets any methods annotated with TestDefinition
      *
-     * @param c
-     * @param <T>
-     * @return
+     * @param c class
+     * @param <T> type of class
+     * @return List of MetaData
      */
     public <T> List<MetaData> getTestNGMetaData(Class<T> c) {
         Method[] methods = c.getMethods();
@@ -238,7 +247,7 @@ public class Reflector {
         }
     }
 
-    public List<ProcessingInfo> processTestDefs() {
+    List<ProcessingInfo> processTestDefs() {
         File mapPath = this.mapPath;
         List<Tuple<Boolean, ProcessingInfo>> coll = this.testDefs.stream().map(td ->
                 MetaProcessor.processTC( td
@@ -292,7 +301,7 @@ public class Reflector {
     }
 
     static List<Meta<TestDefAdapter>> sortTestDefs(List<Meta<TestDefAdapter>> defs) {
-        List<Meta<TestDefAdapter>> adaps = defs.stream().sorted((d1, d2) -> {
+        return defs.stream().sorted((d1, d2) -> {
             String qual1 = d1.qualifiedName;
             String qual2 = d2.qualifiedName;
             if (qual1 == null || qual2 == null) {
@@ -305,7 +314,6 @@ public class Reflector {
             }
             return qual1.compareTo(qual2);
         }).collect(Collectors.toList());
-        return adaps;
     }
 
     List<Optional<MessageResult<ProcessingInfo>>> testcasesImporterRequest(File mapPath) {
