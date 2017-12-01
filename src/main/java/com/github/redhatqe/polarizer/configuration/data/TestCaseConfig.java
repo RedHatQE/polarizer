@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +38,15 @@ public class TestCaseConfig extends BaseConfig {
     public static final String configBasePath = ".polarizer";
     @JsonIgnore
     public static final String defaultConfigFileName = "polarizer-testcase.yml";
+    @JsonIgnore
+    public List<String> completed;
 
     // =========================================================================
     // 3. Constructors go here.  Remember that there must be a no-arg constructor
     // =========================================================================
     public TestCaseConfig() {
         this.servers = new HashMap<>();
+        this.completed = new ArrayList<>(3);
     }
 
     /**
@@ -58,7 +62,7 @@ public class TestCaseConfig extends BaseConfig {
         this.testcase = cfg.getTestcase();
     }
 
-    public Object deepCopy() {
+    public TestCaseConfig deepCopy() {
         TestCaseConfig cfg = new TestCaseConfig();
         this.getServers().forEach((name, si) -> cfg.servers.put(name, new ServerInfo(si)));
         cfg.mapping = this.getMapping();

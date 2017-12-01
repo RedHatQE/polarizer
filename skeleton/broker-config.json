@@ -1,0 +1,20 @@
+{
+  "brokers": {
+    "ci": {
+      "url": "failover:(ssl://your.broker1:12345,ssl://your.broker2:12345)",
+      "user": "foo",
+      "password": "blah",
+      "messages": {
+        "timeout": 300000,
+        "maxMsgs": 2
+      },
+      "tls": {
+        "keystore-path": "/path/to/your/keystore.jks",
+        "truststore-path": "/path/to/your/truststore.jks",
+        "keystorekey-pw": "pw-of-pvtkey-.p12",
+        "keystore-pw": "pw-of-keystore" ,
+        "truststore-pw": "pw-of-truststore",
+      }
+    }
+  }
+}

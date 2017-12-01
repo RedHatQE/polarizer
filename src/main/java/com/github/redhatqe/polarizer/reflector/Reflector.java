@@ -6,6 +6,7 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestDefinitions;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
+import com.github.redhatqe.polarizer.messagebus.config.Broker;
 import com.github.redhatqe.polarizer.processor.MetaData;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.Serializer;
@@ -60,7 +61,7 @@ public class Reflector {
     }
 
     /**
-     * Main constructor for the reflector.  Other constructors should delegate to this one with defaults
+     * Main constructor for the reflector.
      *
      * @param testcaseCfgPath path to the polarizer-testcase.yml
      * @param brokerCfgPath path to the broker-config.yml
@@ -72,6 +73,18 @@ public class Reflector {
             this.tcConfig = Serializer.fromYaml(TestCaseConfig.class, new File(testcaseCfgPath));
             this.brokerConfig = Serializer.fromYaml(BrokerConfig.class, new File(brokerCfgPath));
             this.tcConfig.setMapping(mapPath.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.init();
+    }
+
+    Reflector(TestCaseConfig tCfg) {
+        try {
+            this.tcConfig = tCfg;
+            String brokerCfgPath = BrokerConfig.getDefaultConfigPath();
+            this.brokerConfig = Serializer.fromYaml(BrokerConfig.class, new File(brokerCfgPath));
+            this.mapPath = new File(this.tcConfig.getMapping());
         } catch (IOException e) {
             e.printStackTrace();
         }

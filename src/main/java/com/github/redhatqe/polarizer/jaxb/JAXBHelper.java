@@ -18,7 +18,7 @@ public class JAXBHelper implements IJAXBHelper {
             xsd = JAXBHelper.class.getClass().getResource("schema/testcase.xsd");
         }
         else if (t == Testsuites.class) {
-            xsd = JAXBHelper.class.getClassLoader().getResource("importers/xunit.xsd");
+            xsd = JAXBHelper.class.getClassLoader().getResource("xunit_importers/xunit.xsd");
         }
         else if (t == Testcase.class) {
             xsd = JAXBHelper.class.getClassLoader().getResource("testcase_importer/testcase-importer.xsd");

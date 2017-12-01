@@ -70,6 +70,49 @@ public class MainReflector implements IJarHelper {
         this.mappingFile = this.makeMapFile(mappingPath);
     }
 
+    public MainReflector( String jarpaths
+                        , TestCaseConfig testcaseCfg
+                        , String brokerCfgPath
+                        , String mappingPath) throws IOException {
+        this.tcConfig = testcaseCfg;
+        this.jarPaths = IJarHelper.convertToUrl(jarpaths);
+        this.tcConfig.setPathToJar(jarpaths);
+        // Converts from file:///path/to/file to /path/to/file
+        this.paths = this.jarPaths.stream()
+                .map(URL::getFile)
+                .reduce("", (i, c) -> c + "," + i);
+        this.brokerCfgPath = brokerCfgPath;
+        this.brokerConfig = Serializer.fromYaml(BrokerConfig.class, new File(this.brokerCfgPath));
+        this.mappingFile = this.makeMapFile(mappingPath);
+    }
+
+    public MainReflector( String jarpaths
+            , TestCaseConfig testcaseCfg
+            , BrokerConfig brokerCfg
+            , String mappingPath) throws IOException {
+        this.tcConfig = testcaseCfg;
+        this.jarPaths = IJarHelper.convertToUrl(jarpaths);
+        this.tcConfig.setPathToJar(jarpaths);
+        // Converts from file:///path/to/file to /path/to/file
+        this.paths = this.jarPaths.stream()
+                .map(URL::getFile)
+                .reduce("", (i, c) -> c + "," + i);
+        this.brokerConfig = brokerCfg;
+        this.mappingFile = this.makeMapFile(mappingPath);
+    }
+
+    public MainReflector(TestCaseConfig testcaseCfg) throws IOException {
+        this.tcConfig = testcaseCfg;
+        this.jarPaths = IJarHelper.convertToUrl(this.tcConfig.getPathToJar());
+        // Converts from file:///path/to/file to /path/to/file
+        this.paths = this.jarPaths.stream()
+                .map(URL::getFile)
+                .reduce("", (i, c) -> c + "," + i);
+        this.brokerCfgPath = BrokerConfig.getDefaultConfigPath();
+        this.brokerConfig = Serializer.fromYaml(BrokerConfig.class, new File(this.brokerCfgPath));
+        this.mappingFile = new File(this.tcConfig.getMapping());
+    }
+
     private File makeMapFile(String mappingPath) throws IOException {
         File mapPath;
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rw-rw----");
@@ -82,7 +125,12 @@ public class MainReflector implements IJarHelper {
     }
 
     public Reflector makeReflector() {
-        return new Reflector(this.testcaseCfgPath, this.brokerCfgPath, this.mappingFile);
+        Reflector refl;
+        if (this.testcaseCfgPath == null || this.testcaseCfgPath.equals(""))
+            refl = new Reflector(this.tcConfig);
+        else
+            refl = new Reflector(this.testcaseCfgPath, this.brokerCfgPath, this.mappingFile);
+        return refl;
     }
 
 
@@ -134,8 +182,56 @@ public class MainReflector implements IJarHelper {
         return refl;
     }
 
+    public static Reflector reflect(TestCaseConfig tcfg) throws IOException {
+        MainReflector jh = new MainReflector(tcfg);
+        TestCaseConfig req = jh.tcConfig;
+        List<String> packNames = req.getPackages();
+
+        List<String> classes = new ArrayList<>();
+        for(String s: jh.paths.split(",")) {
+            for (String pn : packNames) {
+                classes.addAll(IJarHelper.getClasses(s, pn));
+            }
+        }
+        Reflector refl = jh.loadClasses(classes);
+        refl.methToProjectDef = refl.makeMethToProjectMeta();
+        List<ProcessingInfo> results = refl.processTestDefs();
+
+        return refl;
+    }
+
     public static JsonObject process(String jarPath, String tcCfgPath, String mappingPath) throws IOException {
         Reflector refl = reflect(jarPath, tcCfgPath, mappingPath);
+
+        if (!refl.mapPath.exists())
+            refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
+                    refl.methToProjectDef, refl.mappingFile);
+        // TODO:  Need to do something with the importResults
+        List<Optional<MessageResult<ProcessingInfo>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
+        JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
+        MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);
+
+        refl.testDefAdapters = refl.testDefs.stream()
+                .map(m -> {
+                    TestDefinition def = m.annotation;
+                    TestDefAdapter adap = TestDefAdapter.create(def);
+                    Meta<TestDefAdapter> meta = Meta.create(m.qualifiedName, m.methName, m.className,
+                            m.packName, m.project, m.polarionID, m.params, adap);
+                    return meta;
+                })
+                .collect(Collectors.toList());
+
+        Set<String> enabledTests = MainReflector.getEnabledTests(refl.methods);
+        Tuple<SortedSet<String>, List<MetaProcessor.UpdateAnnotation>> audit =
+                MetaProcessor.auditMethods(enabledTests, refl.methToProjectDef);
+
+        JsonObject jo = MetaProcessor.writeAuditJson(null, audit);
+        // TODO: Add the mapping file we will return
+        return jo;
+    }
+
+    public static JsonObject process(TestCaseConfig tcfg) throws IOException {
+        Reflector refl = reflect(tcfg);
 
         if (!refl.mapPath.exists())
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,

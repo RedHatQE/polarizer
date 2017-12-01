@@ -3,6 +3,7 @@ package com.github.redhatqe.polarizer.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,4 +32,23 @@ public class Serializer {
         return  mapper.readValue(yaml, cfg);
     }
 
+    public static <T> void to(T cfg, String path) throws IOException {
+        if (path.endsWith(".json"))
+            Serializer.toJson(cfg, path);
+        else
+            Serializer.toYaml(cfg, path);
+    }
+
+    public static <T> T from(Class<T> cfg, File data) throws IOException {
+        if (data.toString().endsWith(".yml") || data.toString().endsWith(".yaml")) {
+            return Serializer.fromYaml(cfg, data);
+        }
+        else
+            return Serializer.fromJson(cfg, data);
+    }
+
+    public static void main(String[] args) throws IOException {
+        TestCaseConfig tcfg = Serializer.from(TestCaseConfig.class, new File(args[0]));
+        tcfg.setMapping("");
+    }
 }

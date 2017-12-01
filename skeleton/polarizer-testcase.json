@@ -1,21 +1,38 @@
 {
-    "brokers": {
-        "ci": {
-            "url": "",
-            "user": "",
-            "password": "",
-            "messages": {
-                "timeout": 300000,
-                "maxMsgs": 2
-            },
-            "tls": {
-                "keystore-path": "/path/to/keystore.jks",
-                "truststore-path": "/path/to/truststore.jks",
-                "keystorekey-pw": "pw-of-pvtkey",
-                "keystore-pw": "pw-of-keystore",
-                "truststore-pw": "pw-of-truststore"
-            }
-        }
+  "project": "PLATTP",
+  "author": "stoner",
+  "packages": [
+    "rhsm.cli.tests",
+    "rhsm.gui.tests"
+  ],
+  "servers": {
+    "polarion": {
+      "url": "https://polarion.server/endpoint",
+      "user": "polarion-user",
+      "password": "polarion-password"
     },
-    "defaultBroker": "ci"
+    "polarion-devel": {
+      "url": "https://polarion-devel.server/endpoint",
+      "user": "polarion-devel-user",
+      "password": "polarion-devel-password"
+    },
+    "polarion-stage": {
+      "url": "https://polarion-stage.server/endpoint",
+      "user": "polarion-stage-user",
+      "password": "polarion-stage-password"
+    }
+  },
+  "testcase": {
+    "endpoint": "/endpoint/testcases",
+    "timeout": 300000,
+    "enabled": true,
+    "selector": {
+      "name": "rhsm_qe",
+      "value": "testcase_importer"
+    },
+    "title": {
+      "prefix": "String to add before title: ",
+      "suffix": " String to add after title"
+    }
+  }
 }

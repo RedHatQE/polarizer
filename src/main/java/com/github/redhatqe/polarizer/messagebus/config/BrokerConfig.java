@@ -2,7 +2,6 @@ package com.github.redhatqe.polarizer.messagebus.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.redhatqe.polarizer.configuration.api.Setter;
 import com.github.redhatqe.polarizer.data.Serializer;
 
 import java.io.File;
@@ -28,10 +27,6 @@ public class BrokerConfig {
     // ==========================================================================
     // 2. Add all fields not belonging to the configuration here
     // ==========================================================================
-    @JsonIgnore
-    public Map<String, Setter<String>> handlers = new HashMap<>();
-    @JsonIgnore
-    public Boolean showHelp = false;
     @JsonIgnore
     public static final String configBasePath = ".polarizer";
     @JsonIgnore

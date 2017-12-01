@@ -95,7 +95,7 @@ public class FileHelper implements IFileHelper {
 
         Path temp;
         try {
-            temp = Files.createTempFile(Paths.get("/tmp"), "testcase-import", suff, fp);
+            temp = Files.createTempFile(Paths.get(dir), pre, suff, fp);
         } catch (IOException e) {
             e.printStackTrace();
             temp = new File(String.format("%s/tmp-%s%s", dir, pre, suff)).toPath();

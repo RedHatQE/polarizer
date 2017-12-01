@@ -16,7 +16,7 @@ public class JAXBReporter implements IJAXBHelper {
     public URL getXSDFromResource(Class<?> t) {
         URL xsd;
         if (t == Testcase.class || t == Testsuite.class || t == Testsuites.class) {
-            xsd = JAXBReporter.class.getClassLoader().getResource("importers/xunit.xsd");
+            xsd = JAXBReporter.class.getClassLoader().getResource("xunit_importers/xunit.xsd");
         }
         else if (t == com.github.redhatqe.polarizer.importer.xunit.Testcase.class) {
             xsd = JAXBReporter.class.getClassLoader().getResource("testcase_importer/testcase-importer.xsd");

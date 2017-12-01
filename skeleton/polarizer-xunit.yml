@@ -1,5 +1,6 @@
 ---
 project: PLATTP
+mapping: /path/to/mapping.json
 servers:          # Optional:  This is already the default
   polarion:
     url: https://polarion.server.com/endpoint

@@ -146,3 +146,30 @@ needs to do the following:
 
 - At a bare minimum, provide a mapping.json file for their tests
 
+Over time, teams should start annotating their methods so that the mapping.json file can be updated more easily, as 
+well as being able to generate XML definition files.  As teams start annotating their methods, for java teams, ensure
+that the annotations have a Retention Policy readable at runtime.
+
+In the future, instead of supplying a jar file, teams can provide a metadata.json file
+
+## Hacking
+
+If you want to hack on polarizer, the directory structure tries to separate concerns (indeed, I want to eventually make
+this a Java 9 modular system soon).  The package structure is as follows:
+
+- com.github.redhatqe.polarizer
+  - configuration:  Holds most of the data classes that can be (de)serialized to/from yaml and json
+    - data: Need to consolidate only classes used as data exchange, and not as actual config files
+    - api: Interfaces declaring behavior for data
+  - data: Classes that implement the annotation interfaces to allow serialization of the annotations to json/yaml
+  - exceptions: general exception classes go here (TODO: move specific exceptions to a related package)
+  - http: The vertx verticles handling the web services and routes
+  - importer: Includes the functionality to perform XUnit Imports and generate xunit report xml files
+    - testcase: JAXB generated files for TestCase importer
+    - xunit: JAXB generated files for XUnit importer
+  - jaxb: helpers to (de)serialize to/from xml and POJOs
+  - messagebus: ActiveMQ client library
+    - config: data classes that can be (de)serialized to/from yaml and json
+  - processor: classes that manipulate and process the metadata and help updating the mapping file
+  - reflector: classes that use reflection on the jar to get the metadata from annotations and handle testcase imports
+  - 
