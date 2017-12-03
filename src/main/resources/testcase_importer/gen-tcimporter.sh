@@ -1,1 +1,1 @@
-xjc -p com.github.redhatqe.polarize.importer.testcase  -d ../../java .
+xjc -p com.github.redhatqe.polarizer.importer.testcase  -d ../../java .

@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.redhatqe.polarizer.data.Serializer.*;
@@ -84,10 +85,10 @@ public class XUnitReporter implements IReporter {
             throw new NoConfigFoundError(String.format("Could not config file %s", configPath));
 
         try {
-            config = fromYaml(XUnitConfig.class, cfgFile);
+            config = from(XUnitConfig.class, cfgFile);
         } catch (IOException e) {
             e.printStackTrace();
-            throw new ConfigurationError("Could not serialize yaml file");
+            throw new ConfigurationError("Could not serialize polarizer-xunit config file");
         }
         return config;
     }
@@ -152,6 +153,49 @@ public class XUnitReporter implements IReporter {
         ts.setFailures(Integer.toString(numFails));
         ts.setSkipped(Integer.toString(numSkips));
         ts.setTests(Integer.toString(numTotal));
+    }
+
+    /**
+     * Creates an xunit file compatible with the Polarion xunit importer service
+     *
+     * @param cfg contains arguments needed to convert xunit to polarion compatible xunit
+     * @param xunit a "standard" xunit xml file
+     * @return a new File that is compatible
+     */
+    public Optional<File> createPolarionXunit(XUnitConfig cfg, File xunit) {
+        Map<String, Map<String, IdParams>> mapping = FileHelper.loadMapping(new File(cfg.getMapping()));
+        String project = cfg.getProject();
+        Function<String, IdParams> fn = (qual) -> {
+            Map<String, IdParams> m = mapping.get(qual);
+            if (m != null) {
+                IdParams param =  m.get(project);
+                if (param == null)
+                    throw new MappingError(String.format("Could not find %s -> %s in mapping", qual, project));
+                return param;
+            }
+            else
+                throw new MappingError(String.format("Could not find %s in mapping", qual));
+        };
+
+        JAXBHelper jaxb = new JAXBHelper();
+        Optional<Testsuites> maybeSuites;
+        maybeSuites = XUnitReporter.getTestSuitesFromXML(xunit);
+
+        if (!maybeSuites.isPresent())
+            throw new XMLUnmarshallError("Could not unmarshall the xunit file");
+        Testsuites suites = maybeSuites.get();
+        suites.getTestsuite()
+                .forEach(ts -> ts.getTestcase().forEach(tc -> {
+                        // Add the properties here
+                        String qual = String.format("%s.%s", tc.getClassname(), tc.getName());
+                        IdParams param = fn.apply(qual);
+                        com.github.redhatqe.polarizer.importer.xunit.Properties props = tc.getProperties();
+                        Property prop = new Property();
+
+                    })
+                );
+
+        return Optional.empty();
     }
 
 
@@ -660,6 +704,18 @@ public class XUnitReporter implements IReporter {
             return Optional.empty();
         com.github.redhatqe.polarizer.importer.testcase.Testcase tcase = tc.get();
         return Optional.of(tcase);
+    }
+
+    private static Optional<com.github.redhatqe.polarizer.importer.xunit.Testsuites>
+    getTestSuitesFromXML(File xmlDesc) {
+        JAXBReporter jaxb = new JAXBReporter();
+        Optional<com.github.redhatqe.polarizer.importer.xunit.Testsuites> ts;
+        ts = IJAXBHelper.unmarshaller(com.github.redhatqe.polarizer.importer.xunit.Testsuites.class, xmlDesc,
+                jaxb.getXSDFromResource(com.github.redhatqe.polarizer.importer.xunit.Testsuites.class));
+        if (!ts.isPresent())
+            return Optional.empty();
+        com.github.redhatqe.polarizer.importer.xunit.Testsuites suites = ts.get();
+        return Optional.of(suites);
     }
 
     /**

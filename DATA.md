@@ -53,7 +53,7 @@ defaultBroker: ci
         "truststore-path": "/path/to/your/truststore.jks",
         "keystorekey-pw": "pw-of-pvtkey-.p12",
         "keystore-pw": "pw-of-keystore" ,
-        "truststore-pw": "pw-of-truststore",
+        "truststore-pw": "pw-of-truststore"
       }
     }
   }
@@ -100,18 +100,8 @@ testcase:
     "polarion": {
       "url": "https://polarion.server/endpoint",
       "user": "polarion-user",
-      "password": "polarion-password",
-    },
-    "polarion-devel": {
-      "url": "https://polarion-devel.server/endpoint",
-      "user": "polarion-devel-user",
-      "password": "polarion-devel-password",
-    },
-    "polarion-stage": {
-      "url": "https://polarion-stage.server/endpoint",
-      "user": "polarion-stage-user",
-      "password": "polarion-stage-password",
-    },
+      "password": "polarion-password"
+    }
   },
   "testcase": {
     "endpoint": "/endpoint/testcases",
@@ -131,7 +121,8 @@ testcase:
 
 ## XUnit data
 
-Similar to the TestCase data, the XUnit data provides information necessary for some of the API calls
+Similar to the TestCase data, the XUnit data provides information necessary for some of the API calls.  The data passed
+here will be used for the /xunit/import endpoint.
 
 ```yaml
 project: PLATTP
@@ -180,13 +171,13 @@ xunit:            # settings for the xunit importer
     "testrun": {
       "id": "",
       "title": "Sean Toner Polarize TestRun",
-      "template-id": "sean toner test template",
+      "template-id": "sean toner test template"
     },
     "custom": {
       "test-suite": {
         "dry-run": false,
         "set-testrun-finished": true,
-        "include-skipped": false,
+        "include-skipped": false
       },
       "properties": {
         "variant": "The template id to use for test runs",
@@ -212,6 +203,7 @@ xunit:            # settings for the xunit importer
 Most of the API calls requires passing in a mapping.json file.  The format is relatively simple and looks like this:
 
 ```json
+{
   "rhsm.cli.tests.ActivationKeyTests.testActivationKeyCreationDeletion" : {
     "RHEL6" : {
       "id" : "RHEL6-21786",
@@ -231,7 +223,8 @@ Most of the API calls requires passing in a mapping.json file.  The format is re
       "id" : "RHEL7-51604",
       "parameters" : [ ]
     }
-  },
+  }
+}
 ```
 
 The mapping.json file maps a unique method name to an ID (so there can't be overloaded method names, but there can be 

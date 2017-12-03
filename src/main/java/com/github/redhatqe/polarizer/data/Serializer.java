@@ -21,6 +21,11 @@ public class Serializer {
         return mapper.readValue(json, cfg);
     }
 
+    public static <T> T fromJson(Class<T> cfg, String json) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, cfg);
+    }
+
     public static <T> void toYaml(T cfg, String path) throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         ObjectWriter writer = mapper.writer().withDefaultPrettyPrinter();
@@ -28,6 +33,11 @@ public class Serializer {
     }
 
     public static <T> T fromYaml(Class<T> cfg, File yaml) throws IOException {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        return  mapper.readValue(yaml, cfg);
+    }
+
+    public static <T> T fromYaml(Class<T> cfg, String yaml) throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         return  mapper.readValue(yaml, cfg);
     }
@@ -41,6 +51,14 @@ public class Serializer {
 
     public static <T> T from(Class<T> cfg, File data) throws IOException {
         if (data.toString().endsWith(".yml") || data.toString().endsWith(".yaml")) {
+            return Serializer.fromYaml(cfg, data);
+        }
+        else
+            return Serializer.fromJson(cfg, data);
+    }
+
+    public static <T> T from(Class<T> cfg, String data) throws IOException {
+        if (data.endsWith(".yml") || data.endsWith(".yaml")) {
             return Serializer.fromYaml(cfg, data);
         }
         else

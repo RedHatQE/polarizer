@@ -15,13 +15,10 @@ public class JAXBHelper implements IJAXBHelper {
     public URL getXSDFromResource(Class<?> t) {
         URL xsd;
         if (t == Testcase.class) {
-            xsd = JAXBHelper.class.getClass().getResource("schema/testcase.xsd");
+            xsd = JAXBHelper.class.getClassLoader().getResource("testcase_importer/testcase-importer.xsd");
         }
         else if (t == Testsuites.class) {
             xsd = JAXBHelper.class.getClassLoader().getResource("xunit_importers/xunit.xsd");
-        }
-        else if (t == Testcase.class) {
-            xsd = JAXBHelper.class.getClassLoader().getResource("testcase_importer/testcase-importer.xsd");
         }
         else if (t == Testcases.class) {
             xsd = JAXBHelper.class.getClassLoader().getResource("testcase_importer/testcase-importer.xsd");

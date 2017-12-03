@@ -1,1 +1,1 @@
-xjc -p com.github.redhatqe.polarize.importer.xunit  -d ../../java .
+xjc -p com.github.redhatqe.polarizer.importer.xunit  -d ../../java .

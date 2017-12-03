@@ -16,12 +16,12 @@ public class XUnitConfig extends BaseConfig {
     // =========================================================================
     @JsonProperty(required=true)
     private XUnitInfo xunit;
+    @JsonProperty
+    private String mapping;
 
     // ==========================================================================
     // 2. Add all fields not belonging to the configuration here
     // ==========================================================================
-    @JsonProperty
-    private String mapping;
     @JsonIgnore
     public final String properties = "properties";
     @JsonIgnore
