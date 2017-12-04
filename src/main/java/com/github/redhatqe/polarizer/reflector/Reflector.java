@@ -48,6 +48,7 @@ public class Reflector {
                Map<String, Meta<TestDefinition>>> methToProjectDef;
     private Map<String, String> methodToDesc = new HashMap<>();
     File mapPath;
+    private List<ProcessingInfo> results;
 
 
     /**
@@ -336,5 +337,13 @@ public class Reflector {
                 , mapPath
                 , this.tcConfig
                 , this.brokerConfig);
+    }
+
+    public List<ProcessingInfo> getResults() {
+        return results;
+    }
+
+    public void setResults(List<ProcessingInfo> results) {
+        this.results = results;
     }
 }

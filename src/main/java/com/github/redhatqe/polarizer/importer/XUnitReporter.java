@@ -718,8 +718,73 @@ public class XUnitReporter implements IReporter {
         return Optional.of(suites);
     }
 
+    private static String checkSelector(String selector) {
+        // Make sure selector is in proper format
+        if (!selector.contains("'")) {
+            String[] tokens = selector.split("=");
+            if (tokens.length != 2)
+                throw new InvalidArgument("--selector must be in form of name=val");
+            String name = tokens[0];
+            String val = tokens[1];
+            selector = String.format("%s='%s'", name, val);
+            logger.info("Modified selector to " + selector);
+        }
+        return selector;
+    }
+
+    private static File getXunitFile(File xml, String xunitPath, String user, String pw) {
+        if (xunitPath.startsWith("https")) {
+            File tmpPath = FileHelper.makeTempFile("/tmp", "testng-polarion-", ".xml", "rw-rw----");
+            Optional<File> body = ImporterRequest.get(xunitPath, user, pw, tmpPath.toString());
+            if (body.isPresent())
+                xml = body.get();
+            else
+                throw new ImportRequestError(String.format("Could not download %s", xml.toString()));
+        }
+        if (!xml.exists())
+            throw new ImportRequestError(String.format("Could not find xunit file %s", xunitPath));
+        else
+            return xml;
+    }
+
+    private static JsonObject _request( String xunitPath
+                                      , String user
+                                      , String pw
+                                      , String url
+                                      , String selector) throws IOException {
+        selector = checkSelector(selector);
+
+        // If the xunitPath starts with http, then download it
+        File xml = getXunitFile(new File(xunitPath), xunitPath, user, pw);
+
+        // TODO: Have a way to pass the broker data in if needed
+        String defaultBrokerPath = ICIBus.getDefaultConfigPath();
+        BrokerConfig brokerCfg = Serializer.fromYaml(BrokerConfig.class, new File(defaultBrokerPath));
+
+        CIBusListener<DefaultResult> cbl = new CIBusListener<>(XUnitReporter.xunitMsgHandler(), brokerCfg);
+        String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
+        Optional<MessageResult<DefaultResult>> maybeResult;
+        maybeResult = ImporterRequest.sendImportByTap( cbl
+                                                     , url
+                                                     , user
+                                                     , pw
+                                                     , xml
+                                                     , selector
+                                                     , address);
+        MessageResult<DefaultResult> n = maybeResult.orElseThrow(() -> new MessageError("Did not get a response message from CI Bus"));
+        JsonObject jo = new JsonObject();
+        if (n.getStatus() != MessageResult.Status.SUCCESS) {
+            jo.put("status", n.getStatus().toString());
+            jo.put("result", n.info.getText());
+            jo.put("errors", n.errorDetails);
+            jo.put("new-xunit-path", xml.toString());
+        }
+
+        return jo;
+    }
+
     /**
-     *
+     * Makes a POST to the
      * @param user
      * @param pw
      * @param xunitPath
@@ -743,52 +808,25 @@ public class XUnitReporter implements IReporter {
         if (pw == null)
             pw = config.getServers().get("polarion").getPassword();
 
+        return _request(xunitPath, user, pw, url, selector);
+    }
 
-        // Make sure selector is in proper format
-        if (!selector.contains("'")) {
-            String[] tokens = selector.split("=");
-            if (tokens.length != 2)
-                throw new InvalidArgument("--selector must be in form of name=val");
-            String name = tokens[0];
-            String val = tokens[1];
-            selector = String.format("%s='%s'", name, val);
-            logger.info("Modified selector to " + selector);
-        }
+    /**
+     * Makes a POST to the polarion /xunit/import
+     *
+     * @param args XUnitConfig object containing all the necessary information
+     * @throws IOException
+     */
+    public static JsonObject
+    request(XUnitConfig args) throws IOException {
+        String url = args.getServers().get("polarion").getUrl() + args.getXunit().getEndpoint();
+        String selector = String.format("%s='%s'", XUnitReporter.config.getXunit().getSelector().getName(),
+                XUnitReporter.config.getXunit().getSelector().getValue());
+        String user = args.getServers().get("polarion").getUser();
+        String pw = config.getServers().get("polarion").getPassword();
+        String xunitPath = args.getCurrentXUnit();
 
-        // If the xunitPath starts with http, then download it
-        File xml = new File(xunitPath);
-        if (xunitPath.startsWith("https")) {
-            Optional<File> body = ImporterRequest.get(xunitPath, user, pw, "/tmp/testng-polarion.xml");
-            if (body.isPresent())
-                xml = body.get();
-            else
-                throw new ImportRequestError(String.format("Could not download %s", xml.toString()));
-        }
-        if (!xml.exists())
-            throw new ImportRequestError(String.format("Could not find xunit file %s", xunitPath));
-
-        String defaultBrokerPath = ICIBus.getDefaultConfigPath();
-        BrokerConfig brokerCfg = Serializer.fromYaml(BrokerConfig.class, new File(defaultBrokerPath));
-
-        CIBusListener<DefaultResult> cbl = new CIBusListener<>(XUnitReporter.xunitMsgHandler(), brokerCfg);
-        String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
-        Optional<MessageResult<DefaultResult>> maybeResult;
-        maybeResult = ImporterRequest.sendImportByTap( cbl
-                                                     , url
-                                                     , user
-                                                     , pw
-                                                     , xml
-                                                     , selector
-                                                     , address);
-        MessageResult<DefaultResult> n = maybeResult.orElseThrow(() -> new MessageError("Did not get a response message from CI Bus"));
-        JsonObject jo = new JsonObject();
-        if (n.getStatus() != MessageResult.Status.SUCCESS) {
-            jo.put("status", n.getStatus().toString());
-            jo.put("result", n.info.getText());
-            jo.put("errors", n.errorDetails);
-        }
-
-        return jo;
+        return _request(xunitPath, user, pw, url, selector);
     }
 
     // FIXME:  make a real test

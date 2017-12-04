@@ -7,7 +7,9 @@ import com.github.redhatqe.polarizer.configuration.XUnitInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class XUnitConfig extends BaseConfig {
@@ -38,6 +40,8 @@ public class XUnitConfig extends BaseConfig {
     public final String brokerServer = "broker";
     @JsonIgnore
     private String newConfigPath = "";
+    @JsonIgnore
+    public List<String> completed;
 
 
     // =========================================================================
@@ -45,7 +49,7 @@ public class XUnitConfig extends BaseConfig {
     // =========================================================================
     public XUnitConfig() {
         this.servers = new HashMap<>();
-        //this.setupDefaultHandlers();
+        this.completed = new ArrayList<>();
     }
 
     /**
@@ -67,6 +71,7 @@ public class XUnitConfig extends BaseConfig {
         cfg.mapping = this.getMapping();
         cfg.project = this.getProject();
         cfg.xunit = this.getXunit();
+        cfg.completed = this.completed;
         return cfg;
     }
 

@@ -13,6 +13,7 @@ import com.github.redhatqe.polarizer.processor.MetaProcessor;
 import com.github.redhatqe.polarizer.utils.IJarHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
 import io.vertx.core.json.JsonObject;
+import sun.applet.Main;
 
 
 import java.io.File;
@@ -35,11 +36,11 @@ import java.util.stream.Collectors;
 public class MainReflector implements IJarHelper {
     final List<URL> jarPaths;
     final String paths;
-    public String testcaseCfgPath;
-    public String brokerCfgPath;
-    public TestCaseConfig tcConfig;
-    public BrokerConfig brokerConfig;
-    public File mappingFile;
+    private String testcaseCfgPath;
+    private String brokerCfgPath;
+    private TestCaseConfig tcConfig;
+    private BrokerConfig brokerConfig;
+    private File mappingFile;
 
     public MainReflector(String jarpaths) throws IOException {
         this(jarpaths, TestCaseConfig.getDefaultConfigPath(), BrokerConfig.getDefaultConfigPath(), null);
@@ -177,7 +178,7 @@ public class MainReflector implements IJarHelper {
         }
         Reflector refl = jh.loadClasses(classes);
         refl.methToProjectDef = refl.makeMethToProjectMeta();
-        List<ProcessingInfo> results = refl.processTestDefs();
+        refl.setResults(refl.processTestDefs());
 
         return refl;
     }
@@ -195,14 +196,12 @@ public class MainReflector implements IJarHelper {
         }
         Reflector refl = jh.loadClasses(classes);
         refl.methToProjectDef = refl.makeMethToProjectMeta();
-        List<ProcessingInfo> results = refl.processTestDefs();
+        refl.setResults(refl.processTestDefs());
 
         return refl;
     }
 
-    public static JsonObject process(String jarPath, String tcCfgPath, String mappingPath) throws IOException {
-        Reflector refl = reflect(jarPath, tcCfgPath, mappingPath);
-
+    private static JsonObject _process(Reflector refl) throws IOException {
         if (!refl.mapPath.exists())
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
                     refl.methToProjectDef, refl.mappingFile);
@@ -215,9 +214,8 @@ public class MainReflector implements IJarHelper {
                 .map(m -> {
                     TestDefinition def = m.annotation;
                     TestDefAdapter adap = TestDefAdapter.create(def);
-                    Meta<TestDefAdapter> meta = Meta.create(m.qualifiedName, m.methName, m.className,
+                    return Meta.create(m.qualifiedName, m.methName, m.className,
                             m.packName, m.project, m.polarionID, m.params, adap);
-                    return meta;
                 })
                 .collect(Collectors.toList());
 
@@ -228,44 +226,24 @@ public class MainReflector implements IJarHelper {
         JsonObject jo = MetaProcessor.writeAuditJson(null, audit);
         // TODO: Add the mapping file we will return
         return jo;
+    }
+
+    public static JsonObject process(String jarPath, String tcCfgPath, String mappingPath) throws IOException {
+        Reflector refl = reflect(jarPath, tcCfgPath, mappingPath);
+        return MainReflector._process(refl);
     }
 
     public static JsonObject process(TestCaseConfig tcfg) throws IOException {
         Reflector refl = reflect(tcfg);
-
-        if (!refl.mapPath.exists())
-            refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
-                    refl.methToProjectDef, refl.mappingFile);
-        // TODO:  Need to do something with the importResults
-        List<Optional<MessageResult<ProcessingInfo>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
-        JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
-        MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);
-
-        refl.testDefAdapters = refl.testDefs.stream()
-                .map(m -> {
-                    TestDefinition def = m.annotation;
-                    TestDefAdapter adap = TestDefAdapter.create(def);
-                    Meta<TestDefAdapter> meta = Meta.create(m.qualifiedName, m.methName, m.className,
-                            m.packName, m.project, m.polarionID, m.params, adap);
-                    return meta;
-                })
-                .collect(Collectors.toList());
-
-        Set<String> enabledTests = MainReflector.getEnabledTests(refl.methods);
-        Tuple<SortedSet<String>, List<MetaProcessor.UpdateAnnotation>> audit =
-                MetaProcessor.auditMethods(enabledTests, refl.methToProjectDef);
-
-        JsonObject jo = MetaProcessor.writeAuditJson(null, audit);
-        // TODO: Add the mapping file we will return
-        return jo;
+        return MainReflector._process(refl);
     }
 
     // FIXME: Replace this with a test
+    // arg[0] jarpath
+    // arg[1] configpath
+    // arg[2] mappath
     public static void main(String[] args) throws IOException {
-        String jarpath = args[0];
-        String configPath = args[1];
-        String mappingPath = args[2];
-        
         JsonObject jo = MainReflector.process(args[0], args[1], args[2]);
+        jo.getString("needs-testdefinition");
     }
 }

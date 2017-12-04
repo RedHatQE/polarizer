@@ -45,7 +45,8 @@ public class APITestSuite extends AbstractVerticle {
 
     public Handler<TestContext> testTestCaseMapper() {
         return tctx -> {
-            // Unfortunately, the vertx web client doesn't support multipart file, so lets use curl
+            // Unfortunately, the vertx web client doesn't support multipart file, so lets use unirest
+
             tctx.assertTrue(1 == 1);
         };
     }
