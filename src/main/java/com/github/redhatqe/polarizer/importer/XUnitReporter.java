@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.redhatqe.polarizer.ImporterRequest;
 import com.github.redhatqe.polarizer.configuration.ServerInfo;
 import com.github.redhatqe.polarizer.configuration.data.XUnitConfig;
-import com.github.redhatqe.polarizer.data.Serializer;
+import com.github.redhatqe.polarizer.configuration.Serializer;
 import com.github.redhatqe.polarizer.exceptions.*;
 import com.github.redhatqe.polarizer.importer.xunit.*;
 import com.github.redhatqe.polarizer.importer.xunit.Error;
@@ -36,7 +36,7 @@ import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.github.redhatqe.polarizer.data.Serializer.*;
+import static com.github.redhatqe.polarizer.configuration.Serializer.*;
 
 /**
  * Class that handles junit report generation for TestNG

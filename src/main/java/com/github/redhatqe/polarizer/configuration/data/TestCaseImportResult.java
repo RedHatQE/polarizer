@@ -3,7 +3,6 @@ package com.github.redhatqe.polarizer.configuration.data;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.redhatqe.polarizer.data.Serializer;
 
 import java.io.IOException;
 import java.util.List;

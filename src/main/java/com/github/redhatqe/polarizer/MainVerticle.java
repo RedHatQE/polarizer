@@ -1,6 +1,6 @@
 package com.github.redhatqe.polarizer;
 
-import com.github.redhatqe.polarizer.data.Serializer;
+import com.github.redhatqe.polarizer.configuration.Serializer;
 import com.github.redhatqe.polarizer.http.Polarizer;
 import com.github.redhatqe.polarizer.http.config.PolarizerVertConfig;
 import com.github.redhatqe.polarizer.tests.config.APITestSuiteConfig;
@@ -31,19 +31,14 @@ public class MainVerticle extends AbstractVerticle {
         DeploymentOptions tOpts = this.setupConfig(APITestSuiteConfig.class, TEST_ENV, TEST_PROP);
 
         Single<String> polarizerDeployer = vertx.rxDeployVerticle(POLARIZER_VERT, pOpts);
-        dep = polarizerDeployer.subscribe(succ -> logger.info("Polarizer was deployed"),
-                                          err -> logger.error("Failed to deploy Polarizer\n" + err.getMessage()));
-
-        // Start the APITestSuite verticle
-        Single<String> deployed = vertx.rxDeployVerticle(TEST_VERT, tOpts);
-        deployed.subscribe(
-                next -> {
-                    logger.info("Verticle is now deployed.  Running tests");
-                },
-                err -> {
-                    logger.error(err.getMessage());
-                }
-        );
+        dep = polarizerDeployer.subscribe(succ -> {
+                    // Start the APITestSuite verticle once the Polarizer verticle is running
+                    Single<String> deployed = vertx.rxDeployVerticle(TEST_VERT, tOpts);
+                    deployed.subscribe(next -> logger.info("Verticle is now deployed.  Running tests"),
+                            err -> logger.error(err.getMessage()));
+                    logger.info("Polarizer was deployed");
+            },
+            err -> logger.error("Failed to deploy Polarizer\n" + err.getMessage()));
     }
 
     public void stop() {

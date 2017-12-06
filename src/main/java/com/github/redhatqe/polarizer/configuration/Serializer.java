@@ -1,4 +1,4 @@
-package com.github.redhatqe.polarizer.data;
+package com.github.redhatqe.polarizer.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;

@@ -1,11 +1,8 @@
 package com.github.redhatqe.polarizer;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import com.github.redhatqe.polarizer.jaxb.IJAXBHelper;
 import com.github.redhatqe.polarizer.jaxb.JAXBHelper;
 import com.github.redhatqe.polarizer.messagebus.CIBusListener;
-import com.github.redhatqe.polarizer.messagebus.IMessageListener;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.utils.IFileHelper;
 import org.apache.http.HttpEntity;
@@ -41,9 +38,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
@@ -77,17 +71,17 @@ public class ImporterRequest {
      * Note that the http response does not hold the data from the request.  Instead, the response of the request is
      * actually sent through the CI Message Bus.  See CIBusListener class
      *
-     * @param url
-     * @param importerFile
-     * @param user
-     * @param pw
-     * @return
+     * @param url url endpoint
+     * @param importerFile file to upload
+     * @param user username authorized to use service
+     * @param pw password for user
+     * @return http response
      */
     public static CloseableHttpResponse post(String url, File importerFile , String user, String pw) {
         CloseableHttpResponse response = null;
         if (!importerFile.exists()) {
             logger.error(String.format("%s did not exist", importerFile.toString()));
-            return response;
+            return null;
         }
         ImporterRequest.logger.info(String.format("Sending %s to importer:\n", importerFile.toString()));
 
@@ -142,7 +136,8 @@ public class ImporterRequest {
             e.printStackTrace();
         }
 
-        ImporterRequest.printBody(response);
+        if (response != null)
+            ImporterRequest.printBody(response);
         return response;
     }
 
@@ -183,45 +178,6 @@ public class ImporterRequest {
             return Optional.of(file.toFile());
     }
 
-    /**
-     * Makes an importer REST call to upload testrun results
-     *
-     * @param url url including the server and endpoint
-     * @param user user to authenticate as
-     * @param pw password for user (note, not encrypted!!)
-     * @param reportPath path the XML file that will be uploaded
-     * @param selector a JMS Selector string
-     * @throws InterruptedException
-     * @throws ExecutionException
-     * @throws JMSException
-     */
-    public static Optional<ObjectNode>
-    sendImportRequest(CIBusListener cbl,
-                      String url,
-                      String user,
-                      String pw,
-                      File reportPath,
-                      String selector)
-            throws InterruptedException, ExecutionException, JMSException {
-        Supplier<Optional<ObjectNode>> sup = IMessageListener.getCIMessage(cbl, selector);
-        CompletableFuture<Optional<ObjectNode>> future = CompletableFuture.supplyAsync(sup);
-        // FIXME: While this async code works, it's possible for the calling thread to finish before the handler is
-        // called.  Perhaps I can return the future, and the calling thread just joins()?
-        //future.thenAccept(messageHandler());
-
-        logger.info("Making import request as user: " + user);
-        CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
-        HttpEntity entity = resp.getEntity();
-        System.out.println(resp.toString());
-
-        // FIXME:  Should I synchronize here?  If I leave this out and return future, it is the caller's responsibility
-        // to check by either calling get() or join()
-        Optional<ObjectNode> maybeNode = future.get();
-
-        // FIXME: Should I add a message handler here?  or just do it externally?
-        return maybeNode;
-    }
-
     public static <T> Optional<MessageResult<T>>
     sendImportByTap( CIBusListener<T> cbl
                    , String url
@@ -235,7 +191,11 @@ public class ImporterRequest {
 
         logger.info("Making import request as user: " + user);
         CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
-        System.out.println(resp.toString());
+        if (resp != null)
+            logger.info(resp.toString());
+        else
+            return Optional.empty();
+
         if (resp.getStatusLine().getStatusCode() != 200) {
             logger.error("Problem sending POST request");
             msg = new MessageResult<>(null, MessageResult.Status.FAILED);
@@ -327,8 +287,8 @@ public class ImporterRequest {
     /**
      * A simple method to download a file from a URL (no https, use get for https site)
      *
-     * @param url
-     * @param output
+     * @param url url to get file
+     * @param output path for where to store download
      * @return
      */
     public static File download(String url, String output) {

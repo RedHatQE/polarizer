@@ -1,8 +1,6 @@
 package com.github.redhatqe.polarizer.test.messagebus;
 
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
-import com.github.redhatqe.polarizer.data.Serializer;
 import com.github.redhatqe.polarizer.data.TestDefinitionType;
 import com.github.redhatqe.polarizer.messagebus.CIBusListener;
 import com.github.redhatqe.polarizer.reflector.MainReflector;

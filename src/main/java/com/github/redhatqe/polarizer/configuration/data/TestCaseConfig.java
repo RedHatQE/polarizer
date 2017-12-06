@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TestCaseConfig extends BaseConfig {
     // =========================================================================
@@ -60,6 +61,10 @@ public class TestCaseConfig extends BaseConfig {
         this.mapping = cfg.getMapping();
         this.project = cfg.getProject();
         this.testcase = cfg.getTestcase();
+        this.packages = cfg.getPackages();
+        this.author = cfg.getAuthor();
+        this.pathToJar = cfg.getPathToJar();
+        this.completed = new ArrayList<>(cfg.completed);
     }
 
     public TestCaseConfig deepCopy() {
@@ -68,6 +73,10 @@ public class TestCaseConfig extends BaseConfig {
         cfg.mapping = this.getMapping();
         cfg.project = this.getProject();
         cfg.testcase = this.getTestcase();
+        this.packages = cfg.getPackages();
+        this.author = cfg.getAuthor();
+        this.pathToJar = cfg.getPathToJar();
+        this.completed = new ArrayList<>(cfg.completed);
         return cfg;
     }
 

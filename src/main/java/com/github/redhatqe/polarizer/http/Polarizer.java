@@ -2,7 +2,7 @@ package com.github.redhatqe.polarizer.http;
 
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.configuration.data.XUnitConfig;
-import com.github.redhatqe.polarizer.data.Serializer;
+import com.github.redhatqe.polarizer.configuration.Serializer;
 import com.github.redhatqe.polarizer.reflector.MainReflector;
 import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
@@ -103,6 +103,7 @@ public class Polarizer extends AbstractVerticle {
                 tcfg = new TestCaseConfig(maybeCfg);
                 tcfg.setMapping(mapping);
                 tcfg.setPathToJar(pathToJar);
+                this.tcMapperArgs.put(cd.getId(), tcfg);
             }
             tcfg.completed.add("tc");
             if (tcfg.completed.size() == 3)

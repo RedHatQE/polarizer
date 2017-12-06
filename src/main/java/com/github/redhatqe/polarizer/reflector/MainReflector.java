@@ -4,7 +4,7 @@ import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
-import com.github.redhatqe.polarizer.data.Serializer;
+import com.github.redhatqe.polarizer.configuration.Serializer;
 import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.processor.Meta;
@@ -13,7 +13,6 @@ import com.github.redhatqe.polarizer.processor.MetaProcessor;
 import com.github.redhatqe.polarizer.utils.IJarHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
 import io.vertx.core.json.JsonObject;
-import sun.applet.Main;
 
 
 import java.io.File;

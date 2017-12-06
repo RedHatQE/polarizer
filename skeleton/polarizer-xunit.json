@@ -12,13 +12,13 @@
     "testrun": {
       "id": "",
       "title": "Sean Toner Polarize TestRun",
-      "template-id": "sean toner test template",
+      "template-id": "sean toner test template"
     },
     "custom": {
       "test-suite": {
         "dry-run": false,
         "set-testrun-finished": true,
-        "include-skipped": false,
+        "include-skipped": false
       },
       "properties": {
         "variant": "The template id to use for test runs",

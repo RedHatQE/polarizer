@@ -1,7 +1,7 @@
 package com.github.redhatqe.polarizer.configuration.api;
 
 
-import com.github.redhatqe.polarizer.data.Serializer;
+import com.github.redhatqe.polarizer.configuration.Serializer;
 
 import java.io.IOException;
 
