@@ -1,8 +1,8 @@
 package com.github.redhatqe.polarizer;
 
-import com.github.redhatqe.polarizer.configuration.Serializer;
 import com.github.redhatqe.polarizer.http.Polarizer;
 import com.github.redhatqe.polarizer.http.config.PolarizerVertConfig;
+import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.tests.config.APITestSuiteConfig;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;

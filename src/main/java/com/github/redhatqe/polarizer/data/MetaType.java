@@ -2,8 +2,8 @@ package com.github.redhatqe.polarizer.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import com.github.redhatqe.polarizer.importer.testcase.Parameter;
 import com.github.redhatqe.polarizer.processor.Meta;
+import com.github.redhatqe.polarizer.reporter.importer.testcase.Parameter;
 
 import java.util.List;
 

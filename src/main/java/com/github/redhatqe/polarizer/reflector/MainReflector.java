@@ -4,8 +4,8 @@ import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
-import com.github.redhatqe.polarizer.configuration.Serializer;
-import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
+import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
+import com.github.redhatqe.polarizer.reporter.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.processor.Meta;
 import com.github.redhatqe.polarizer.processor.MetaData;
@@ -151,6 +151,8 @@ public class MainReflector implements IJarHelper {
                 refl.getAnnotations(cls);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
+            } catch (NoClassDefFoundError ex) {
+                System.err.println("Got a NoClassDefFoundError.  Try uploading a 'fat' or 'uber' jar");
             }
         }
         return refl;

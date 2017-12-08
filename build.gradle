@@ -5,19 +5,22 @@ buildscript {
 }
 
 plugins {
-    id "application"
+    id "java"
     id 'com.github.johnrengelman.shadow' version '2.0.1'
     id "maven"
+    id "maven-publish"
     id "signing"
+    id "com.jfrog.bintray" version "1.7.3"
 }
 
 repositories {
     jcenter ()
+    maven { url "https://dl.bintray.com/rarebreed/reporter" }
 }
 
 group = 'com.github.redhatqe.polarizer'
-version = '0.2.0-SNAPSHOT'
-mainClassName = "io.vertx.core.Launcher"
+version = '0.2.0'
+def mainClassName = "io.vertx.core.Launcher"
 sourceCompatibility = 1.8
 
 String vertxVersion = '3.5.0'
@@ -45,6 +48,15 @@ def getCreds(String polarizePropertyFile) {
     return new Creds(props.getProperty("ossrhUsername"), props.getProperty("ossrhPassword"))
 }
 
+def getCreds(String polarizePropertyFile, String field1, String field2) {
+    File f = new File(polarizePropertyFile)
+    Properties props = new Properties()
+    props.load(f.newDataInputStream())
+    return new Creds(props.getProperty(field1), props.getProperty(field2))
+}
+
+Creds credsOssrh = getCreds(propFile)
+Creds credsBintray = getCreds(propFile, "bintrayUser", "bintrayPassword")
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -68,6 +80,7 @@ dependencies {
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.github.redhatqe.polarize:polarize-meta:0.1.0'
+    compile 'com.github.redhatqe.polarizer:reporter:0.2.0'
 }
 
 task wrapper(type: Wrapper) {
@@ -86,14 +99,17 @@ shadowJar {
     }
 }
 
+/*
 run {
     args = [ 'run'
            , mainVerticleName
-           , "--redeploy=$watchForChange"
-           , "--launcher-class=$mainClassName"
-           , "--on-redeploy=$doOnChange"
+           , "--redeploy=${watchForChange}"
+           , "--launcher-class=${mainClassName}"
+           , "--on-redeploy=${doOnChange}"
            ]
 }
+*/
+
 
 // Had to add the -quiet option when creating the javadocs for Java 8, or creation will fail
 // Generates javadocs
@@ -123,47 +139,72 @@ signing {
     sign configurations.archives
 }
 
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            Creds creds = getCreds(propFile)
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: creds.user, password: creds.pw)
+bintray {
+    user = credsBintray.user
+    key = credsBintray.pw
+    override = true
+    publish = true
+    pkg {
+        repo = 'polarizer'
+        name = 'polarizer'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/rarebreed/reporter.git'
+        version {
+            name = "${version}"
+            desc = 'Data definitions for xunit and testcase for polarize.  TestNG Reporter'
+            released  = new Date()
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
             }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: creds.user, password: creds.pw)
+            mavenCentralSync {
+                sync = true //[Default: true] Determines whether to sync the version to Maven Central.
+                user =  "${credsOssrh.user}" //OSS user token: mandatory
+                password = "${credsOssrh.pw}" //OSS user password: mandatory
+                close = '1' //Optional property. By default the staging repository is closed and artifacts are released to Maven Central. You can optionally turn this behaviour off (by puting 0 as value) and release the version manually.
             }
+        }
+    }
+    publications = ['MyPublication']
+}
 
-            pom.project {
-                name project.name
-                packaging 'jar'
-                description 'Library to help with configuration'
-                url projectURL
+// Create the pom configuration:
+def pomConfig = {
+    licenses {
+        license {
+            name "The Apache Software License, Version 2.0"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        }
+    }
+    developers {
+        developer {
+            id "stoner"
+            name "Sean Toner"
+            email "stoner@redhat.com"
+        }
+    }
 
-                scm {
-                    connection "scm:git:${projectURL}.git"
-                    developerConnection "scm:git:${devURL}"
-                    url projectURL
-                }
+    scm {
+        connection "scm:git:${projectURL}.git"
+        developerConnection "scm:git:${devURL}"
+        url "${projectURL}"
+    }
+}
 
-                licenses {
-                    license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'stoner'
-                        name 'Sean Toner'
-                        email 'stoner@redhat.com'
-                    }
-                }
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact sourceJar
+            artifact javadocJar
+            groupId 'com.github.redhatqe.polarizer'
+            artifactId 'polarizer'
+            version "${version}"
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'JAXB classes for xunit and testcases, TestNG reporter')
+                root.appendNode('name', 'reporter')
+                root.appendNode('url', "${projectURL}")
+                root.children().last() + pomConfig
             }
         }
     }

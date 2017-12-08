@@ -1,8 +1,8 @@
 package com.github.redhatqe.polarizer.http;
 
-import com.github.redhatqe.polarizer.configuration.data.TestCaseConfig;
-import com.github.redhatqe.polarizer.configuration.data.XUnitConfig;
-import com.github.redhatqe.polarizer.configuration.Serializer;
+import com.github.redhatqe.polarizer.reporter.configuration.data.TestCaseConfig;
+import com.github.redhatqe.polarizer.reporter.configuration.data.XUnitConfig;
+import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.reflector.MainReflector;
 import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
@@ -312,7 +312,7 @@ public class Polarizer extends AbstractVerticle {
      *
      * This function will do the following:
      * - Serialize the XunitConfig object
-     * - Call XUnitReporter.createPolarionXunit()
+     * - Call XUnitService.createPolarionXunit()
      *
      * @param req HttpServerRequest
      * @return Handler for /xunit/generate

@@ -2,7 +2,7 @@ package com.github.redhatqe.polarizer.reflector;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.redhatqe.polarizer.configuration.ServerInfo;
+import com.github.redhatqe.polarizer.reporter.configuration.ServerInfo;
 
 import java.util.List;
 import java.util.Map;

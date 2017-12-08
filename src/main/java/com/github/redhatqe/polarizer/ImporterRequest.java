@@ -1,9 +1,9 @@
 package com.github.redhatqe.polarizer;
 
-import com.github.redhatqe.polarizer.jaxb.IJAXBHelper;
-import com.github.redhatqe.polarizer.jaxb.JAXBHelper;
 import com.github.redhatqe.polarizer.messagebus.CIBusListener;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
+import com.github.redhatqe.polarizer.reporter.jaxb.IJAXBHelper;
+import com.github.redhatqe.polarizer.reporter.jaxb.JAXBHelper;
 import com.github.redhatqe.polarizer.utils.IFileHelper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -93,7 +93,7 @@ public class ImporterRequest {
                 .setDefaultCredentialsProvider(provider)
                 .setRedirectStrategy(new LaxRedirectStrategy());
 
-        // FIXME: This should probably go into a helper class since the XUnitReporter is going to need this too
+        // FIXME: This should probably go into a helper class since the XUnitService is going to need this too
         try {
             URI polarion = null;
             try {

@@ -59,7 +59,7 @@ further.  All you need to do is supply three things:
 - a config.yml or config.json file
 - a mapping.json file
 - Add the following to your invocation of org.testng.TestNG
-  - -reporter com.github.redhatqe.polarizer.importer.XUnitReporter
+  - -reporter com.github.redhatqe.polarizer.importer.XUnitService
   
 polarizer comes with the XUnitReporter class which supplies a Reporter interface, so that as your test runs, it will 
 generate a Polarion XUnit Importer compatible file.

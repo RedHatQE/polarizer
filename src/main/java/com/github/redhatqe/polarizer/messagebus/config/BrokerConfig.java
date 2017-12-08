@@ -2,7 +2,7 @@ package com.github.redhatqe.polarizer.messagebus.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.redhatqe.polarizer.configuration.Serializer;
+import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 
 import java.io.File;
 import java.io.IOException;

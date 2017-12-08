@@ -2,8 +2,8 @@ package com.github.redhatqe.polarizer.messagebus.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.redhatqe.polarizer.configuration.data.MessageOpts;
-import com.github.redhatqe.polarizer.configuration.data.TLSClient;
+import com.github.redhatqe.polarizer.reporter.configuration.data.MessageOpts;
+import com.github.redhatqe.polarizer.reporter.configuration.data.TLSClient;
 
 /**
  * Created by stoner on 5/17/17.
