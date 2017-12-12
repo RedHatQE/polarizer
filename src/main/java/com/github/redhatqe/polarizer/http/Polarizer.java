@@ -252,28 +252,41 @@ public class Polarizer extends AbstractVerticle {
         });
     }
 
-    private <T> TestCaseConfig checkMapperArgs(CompletionData<T> data) {
-        TestCaseConfig tcfg;
-        if (tcMapperArgs.containsKey(data.getId()))
-            tcfg = tcMapperArgs.get(data.getId());
-        else {
-            tcfg = new TestCaseConfig();
-            tcMapperArgs.put(data.getId(), tcfg);
-        }
-        return tcfg;
+    private <T, U> Optional<T> checkMapper(CompletionData<U> data, Map<UUID, T> map) {
+        T tcfg = null;
+        if (map.containsKey(data.getId()))
+            tcfg = map.get(data.getId());
+        return Optional.ofNullable(tcfg);
     }
 
-    private XUnitConfig checkXunitMapperArgs(CompletionData<String> data) {
-        XUnitConfig xcfg;
-        if (xunitMapperArgs.containsKey(data.getId()))
-            xcfg = xunitMapperArgs.get(data.getId());
-        else {
-            xcfg = new XUnitConfig();
-            xunitMapperArgs.put(data.getId(), xcfg);
-        }
-        return xcfg;
+    private <T, U> Handler<Void>
+    uploadHdlr( String msg
+              , String path
+              , String type
+              , UUID id
+              , Class<T> cls
+              , Map<UUID, T> map
+              , Subject<Tuple<T, CompletionData<U>>> stream) {
+        return (Void) -> {
+            logger.info(msg);
+            CompletionData<U> data = new CompletionData<>(type, path, id);
+            Optional<T> mCfg = this.checkMapper(data, map);
+            T tcfg = mCfg.orElseGet(() -> {
+                T cfg = null;
+                try {
+                    cfg = cls.newInstance();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                map.put(data.getId(), cfg);
+                return cfg;
+            });
+            Tuple<T, CompletionData<U>> t = new Tuple<>(tcfg, data);
+            stream.onNext(t);
+        };
     }
-
 
     /**
      * Provides a Handler useable for Subject's that take a Tuple of TestCaseConfig and CompletionData of String
@@ -285,7 +298,7 @@ public class Polarizer extends AbstractVerticle {
      * @param stream a stream that takes a Tuple of a TestCaseConfig, and CompletionData of String
      * @return Handler functional interface
      */
-    private Handler<Void>
+    private <T> Handler<Void>
     uploadHandler( String msg
                  , String path
                  , String type
@@ -294,7 +307,12 @@ public class Polarizer extends AbstractVerticle {
         return (Void) -> {
             logger.info(msg);
             CompletionData<String> data = new CompletionData<>(type, path, id);
-            TestCaseConfig tcfg = this.checkMapperArgs(data);
+            Optional<TestCaseConfig> mCfg = this.checkMapper(data, this.tcMapperArgs);
+            TestCaseConfig tcfg = mCfg.orElseGet(() -> {
+                    TestCaseConfig cfg = new TestCaseConfig();
+                    this.tcMapperArgs.put(data.getId(), cfg);
+                    return cfg;
+            });
             Tuple<TestCaseConfig, CompletionData<String>> t = new Tuple<>(tcfg, data);
             stream.onNext(t);
         };
@@ -312,18 +330,54 @@ public class Polarizer extends AbstractVerticle {
      */
     private Handler<Void>
     xuploadHandler( String msg
-            , String path
-            , String type
-            , UUID id
-            , Subject<Tuple<XUnitConfig, CompletionData<String>>> stream) {
+                  , String path
+                  , String type
+                  , UUID id
+                  , Subject<Tuple<XUnitConfig, CompletionData<String>>> stream) {
         return (Void) -> {
             logger.info(msg);
             CompletionData<String> data = new CompletionData<>(type, path, id);
-            XUnitConfig xcfg = this.checkXunitMapperArgs(data);
-            Tuple<XUnitConfig, CompletionData<String>> t = new Tuple<>(xcfg, data);
+            Optional<XUnitConfig> mCfg = this.checkMapper(data, this.xunitMapperArgs);
+            XUnitConfig cfg = mCfg.orElseGet(() -> {
+                    XUnitConfig args = new XUnitConfig();
+                    this.xunitMapperArgs.put(data.getId(), args);
+                    return args;
+            });
+            Tuple<XUnitConfig, CompletionData<String>> t = new Tuple<>(cfg, data);
             stream.onNext(t);
         };
     }
+
+    /**
+     * Handles a JSON upload that will be serialized into an XUnitConfig object then passed to the xunitImportStream
+     *
+     * @param upload HttpSsrverFileUpload object
+     */
+    private void xargsUploadHandler( HttpServerFileUpload upload
+                                   , UUID id
+                                   , BehaviorSubject<Tuple<XUnitConfig, CompletionData<XUnitConfig>>> arg$) {
+        // Instead of streaming to the filesystem then deserialize, just deserialize from buffer
+        Buffer buff = Buffer.buffer();
+        // As the file upload chunks come in, the next handler will append them to buff.  Once we have a
+        // completion event, we can convert the buffer to a string, and deserialize into our object
+        upload.toFlowable().subscribe(
+                buff::appendBuffer,
+                err -> logger.error("Could not upload xargs file"),
+                () -> {
+                    logger.info("xargs json file has been fully uploaded");
+                    XUnitConfig xargs = null;
+                    logger.info(buff.toString());
+                    try {
+                        xargs = Serializer.from(XUnitConfig.class, buff.toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    CompletionData<XUnitConfig> data = new CompletionData<>("xargs", xargs, id);
+                    Tuple<XUnitConfig, CompletionData<XUnitConfig>> t = new Tuple<>(xargs, data);
+                    arg$.onNext(t);
+                });
+    }
+
 
     /**
      * Creates handler to be called when all form uploads have been completed
@@ -436,13 +490,17 @@ public class Polarizer extends AbstractVerticle {
                     String path = FileHelper.makeTempFile("/tmp", "mapping", ".json", null).toString();
                     upload.streamToFileSystem(path);
                     String msg = "mapping.json now fully uploaded";
-                    upload.endHandler(this.uploadHandler(msg, path, "mapping", id, this.tcMapperMap$));
+                    //upload.endHandler(this.uploadHandler(msg, path, "mapping", id, this.tcMapperMap$));
+                    upload.endHandler(this.uploadHdlr(msg, path, "mapping", id, TestCaseConfig.class,
+                            this.tcMapperArgs, this.tcMapperMap$));
                     break;
                 case "jar":
                     String jarpath = FileHelper.makeTempFile("/tmp", "jarToCheck", ".jar", null).toString();
                     upload.streamToFileSystem(jarpath);
                     String jmsg = "jar file now fully uploaded";
-                    upload.endHandler(this.uploadHandler(jmsg, jarpath, "jar", id, this.tcMapperJar$));
+                    //upload.endHandler(this.uploadHandler(jmsg, jarpath, "jar", id, this.tcMapperJar$));
+                    upload.endHandler(this.uploadHdlr(jmsg, jarpath, "jar", id, TestCaseConfig.class,
+                            this.tcMapperArgs, this.tcMapperJar$));
                     break;
                 case "testcase":
                     String configPath;
@@ -471,35 +529,6 @@ public class Polarizer extends AbstractVerticle {
     }
 
     /**
-     * Handles a JSON upload that will be serialized into an XUnitConfig object then passed to the xunitImportStream
-     *
-     * @param upload HttpSsrverFileUpload object
-     */
-    private void xargsUploadHandler(HttpServerFileUpload upload, UUID id) {
-        // Instead of streaming to the filesystem then deserialize, just deserialize from buffer
-        Buffer buff = Buffer.buffer();
-        // As the file upload chunks come in, the next handler will append them to buff.  Once we have a
-        // completion event, we can convert the buffer to a string, and deserialize into our object
-        upload.toFlowable().subscribe(n -> {
-            n.appendBuffer(buff);
-        }, err -> {
-            logger.error("Could not upload xargs file");
-        }, () -> {
-            logger.info("xargs json file has been fully uploaded");
-            XUnitConfig xargs = null;
-            try {
-                xargs = Serializer.from(XUnitConfig.class, buff.toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            CompletionData<XUnitConfig> data = new CompletionData<>("xargs", xargs, id);
-            Tuple<XUnitConfig, CompletionData<XUnitConfig>> t = new Tuple<>(xargs, data);
-            this.xunitArgs$.onNext(t);
-        });
-    }
-
-
-    /**
      * This method will generate an XML xunit file compatible with the XUnit Importer
      *
      * The body of the context will contain the following from a form upload:
@@ -522,16 +551,20 @@ public class Polarizer extends AbstractVerticle {
                     path = FileHelper.makeTempFile("/tmp", "polarion-result-", ".xml", null).toString();
                     upload.streamToFileSystem(path);
                     msg = "xunit xml file now fully uploaded";
-                    upload.endHandler(this.xuploadHandler(msg, path, "xunit", id, this.xunitFile$));
+                    //upload.endHandler(this.xuploadHandler(msg, path, "xunit", id, this.xunitFile$));
+                    upload.endHandler(this.uploadHdlr(msg, path, "xunit", id, XUnitConfig.class,
+                            this.xunitMapperArgs, this.xunitFile$));
                     break;
                 case "xargs":
-                    this.xargsUploadHandler(upload, id);
+                    this.xargsUploadHandler(upload, id, this.xunitArgs$);
                     break;
                 case "mapping":
                     path = FileHelper.makeTempFile("/tmp", "mapping", ".json", null).toString();
                     upload.streamToFileSystem(path);
                     msg = "mapping.json now fully uploaded";
-                    upload.endHandler(this.xuploadHandler(msg, path, "mapping", id, this.xunitMap$));
+                    //upload.endHandler(this.xuploadHandler(msg, path, "mapping", id, this.xunitMap$));
+                    upload.endHandler(this.uploadHdlr(msg, path, "mapping", id, XUnitConfig.class,
+                            this.xunitMapperArgs, this.xunitMap$));
                     break;
                 default:
                     break;
@@ -539,14 +572,6 @@ public class Polarizer extends AbstractVerticle {
         });
 
         // TODO: make call to the importerRequest
-    }
-
-    /**
-     *
-     * @param rc context passed by server
-     */
-    private void testcaseImport(RoutingContext rc) {
-
     }
 
     /**
@@ -567,15 +592,23 @@ public class Polarizer extends AbstractVerticle {
                     path = FileHelper.makeTempFile("/tmp", "polarion-result-", ".xml", null).toString();
                     upload.streamToFileSystem(path);
                     msg = "xunit xml file now fully uploaded";
-                    upload.endHandler(this.xuploadHandler(msg, path, "xunit", id, this.xunitFile$));
+                    upload.endHandler(this.xuploadHandler(msg, path, "xunit", id, this.xunitImpFile$));
                     break;
                 case "xargs":
-                    this.xargsUploadHandler(upload, id);
+                    this.xargsUploadHandler(upload, id, this.xunitImpArgs$);
                     break;
                 default:
                     break;
             }
         }).endHandler(this.xunitImportHandler(req));
+    }
+
+    /**
+     *
+     * @param rc context passed by server
+     */
+    private void testcaseImport(RoutingContext rc) {
+
     }
 
     public void start() {

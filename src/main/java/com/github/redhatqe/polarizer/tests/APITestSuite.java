@@ -47,7 +47,7 @@ public class APITestSuite extends AbstractVerticle {
     public void test() {
         this.logger.info("================ Starting tests ================");
         suite.test("basic test", this.testTestCaseMapper());
-        suite.run();
+        //suite.run();
     }
 
     public Handler<TestContext> testTestCaseMapper() {
