@@ -43,16 +43,15 @@ public class XUnitService {
     public static String configPath = System.getProperty("polarize.config");
     public File cfgFile = null;
     private XUnitConfig config;
-    private final static File defaultPropertyFile =
-            new File(System.getProperty("user.home") + "/.polarize/reporter.properties");
     private static List<String> failedSuites = new ArrayList<>();
 
-    public final static String templateId = "polarion-testrun-template-id";
-    public final static String testrunId = "polarion-testrun-id";
-    public final static String testrunTitle = "polarion-testrun-title";
-    public final static String polarionCustom = "polarion-custom";
-    public final static String polarionResponse = "polarion-response";
-    private File bad = new File("/tmp/bad-tests.txt");
+    public XUnitService(XUnitConfig cfg) {
+        this.config = cfg;
+    }
+
+    public XUnitService() {
+        this.getConfig(null);
+    }
 
     public void setXUnitConfig(String path) throws IOException {
         if (path == null || path.equals(""))

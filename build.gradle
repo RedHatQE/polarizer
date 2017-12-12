@@ -16,6 +16,7 @@ plugins {
 repositories {
     jcenter ()
     maven { url "https://dl.bintray.com/rarebreed/reporter" }
+    mavenLocal()
 }
 
 group = 'com.github.redhatqe.polarizer'
@@ -80,7 +81,7 @@ dependencies {
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.github.redhatqe.polarize:polarize-meta:0.1.0'
-    compile 'com.github.redhatqe.polarizer:reporter:0.2.0'
+    compile 'com.github.redhatqe.polarizer:reporter:0.2.0-SNAPSHOT'
 }
 
 task wrapper(type: Wrapper) {
