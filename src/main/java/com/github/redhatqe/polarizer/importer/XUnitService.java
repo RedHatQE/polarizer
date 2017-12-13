@@ -92,7 +92,7 @@ public class XUnitService {
      * @param xunit a "standard" xunit xml file
      * @return a new File that is compatible
      */
-    public Optional<File> createPolarionXunit(XUnitConfig cfg, File xunit) {
+    public static Optional<File> createPolarionXunit(XUnitConfig cfg, File xunit) {
         Map<String, Map<String, IdParams>> mapping = FileHelper.loadMapping(new File(cfg.getMapping()));
         String project = cfg.getProject();
         Function<String, IdParams> fn = (qual) -> {

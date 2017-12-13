@@ -10,15 +10,13 @@ import io.vertx.reactivex.core.file.FileSystem;
 import org.apache.camel.util.StringHelper;
 
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class FileHelper implements IFileHelper {
@@ -166,5 +164,14 @@ public class FileHelper implements IFileHelper {
             e.printStackTrace();
         }
         return mapped;
+    }
+
+    public static String readFile(String path) throws IOException {
+        BufferedReader rdr = Files.newBufferedReader(Paths.get(path));
+        String content = rdr.lines().reduce("", (acc, n) -> {
+            acc += n;
+            return acc;
+        });
+        return content;
     }
 }

@@ -1,12 +1,14 @@
 package com.github.redhatqe.polarizer.http;
 
 import com.github.redhatqe.polarizer.importer.XUnitService;
+import com.github.redhatqe.polarizer.reporter.XUnitReporter;
 import com.github.redhatqe.polarizer.reporter.configuration.api.IComplete;
 import com.github.redhatqe.polarizer.reporter.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.reporter.configuration.data.XUnitConfig;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.reflector.MainReflector;
 import com.github.redhatqe.polarizer.utils.FileHelper;
+import com.github.redhatqe.polarizer.utils.IFileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -432,12 +434,19 @@ public class Polarizer extends AbstractVerticle {
      * @return Handler for /xunit/generate
      */
     private Handler<Void> xunitGenerateHandler(HttpServerRequest req) {
-        return v -> this.xunitGenHandler.subscribe(n -> {
-
+        return v -> this.xunitGenHandler.subscribe((XUnitConfig n) -> {
+            XUnitReporter.createPolarionXunit(n);
+            String newxunit = n.getNewXunit();
+            JsonObject jo = new JsonObject();
+            jo.put("status", "success");
+            jo.put("xunit", FileHelper.readFile(newxunit));
+            req.response().end(jo.encode());
         }, err -> {
-
+            JsonObject jo = new JsonObject();
+            jo.put("status", "failed");
+            req.response().end(jo.encode());
         }, () -> {
-
+            logger.info("Completed xunitGenerateHandler");
         });
     }
 
@@ -546,7 +555,7 @@ public class Polarizer extends AbstractVerticle {
                 default:
                     break;
             }
-        });
+        }).endHandler(this.xunitGenerateHandler(req));
 
         // TODO: make call to the importerRequest
     }
@@ -586,6 +595,10 @@ public class Polarizer extends AbstractVerticle {
      * @param rc context passed by server
      */
     private void testcaseImport(RoutingContext rc) {
+        logger.info("In testcaseImport");
+        HttpServerRequest req = rc.request();
+
+        UUID id = UUID.randomUUID();
 
     }
 

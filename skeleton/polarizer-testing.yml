@@ -1,0 +1,16 @@
+xunit:
+  importer:
+    xml: "/path/to/xunit/xml"
+    args: "/path/to/polarizer-xunit.json|yml"
+  generate:
+    focus: "/path/to/xunit/xml"
+    args: "/path/to/polarizer-xunit.json|yml"
+    mapping: "/path/to/mapping.json"
+testcase:
+  importer:
+    xml: "/path/to/testcase.xml"
+    args: "/path/to/polarizer-testcase.json|yml"
+  mapper:
+    focus: "/path/to/jar"
+    mapping: "/path/to/mapping.json"
+    args: "/path/to/polarizer-testcase.json|yml"
