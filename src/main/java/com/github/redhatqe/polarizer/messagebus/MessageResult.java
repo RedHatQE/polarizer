@@ -46,14 +46,16 @@ public class MessageResult<T> {
     }
 
     public enum Status {
-        FAILED,
-        SUCCESS,
-        PENDING,
-        NO_MESSAGE,
-        EMPTY_MESSAGE,
-        TIMED_OUT,
-        NP_EXCEPTION,
-        WRONG_MESSAGE_FORMAT,
-        JMS_EXCEPTION;
+        FAILED,                 // The request from the Receiving (eg Polarion) side failed
+        SUCCESS,                // The request from the Receiving side passed
+        PENDING,                // The sender has successfully sent (but dont know if receiver got it
+        QUEUED,                 // The receiver has received the request, but has not serviced request yet
+        NO_MESSAGE,             // No message at all was received, but before Time out
+        EMPTY_MESSAGE,          // Message was received, but is empty (no contents)
+        TIMED_OUT,              // Waiting for message response timed out
+        SEND_FAIL,              // The http post failed for some reason
+        NP_EXCEPTION,           // Null pointer exception occurred (usually on sending side)
+        WRONG_MESSAGE_FORMAT,   // Message was received, but was not of the expected format
+        JMS_EXCEPTION;          // JMS exception occurred, either on sending or receiving side
     }
 }

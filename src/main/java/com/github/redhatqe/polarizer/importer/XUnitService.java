@@ -261,21 +261,31 @@ public class XUnitService {
         CIBusListener<DefaultResult> cbl = new CIBusListener<>(XUnitService.xunitMsgHandler(), brokerCfg);
         String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
         Optional<MessageResult<DefaultResult>> maybeResult;
-        maybeResult = ImporterRequest.sendImportByTap( cbl
-                , url
-                , user
-                , pw
-                , xml
-                , selector
-                , address);
-        MessageResult<DefaultResult> n = maybeResult.orElseThrow(() -> new MessageError("Did not get a response message from CI Bus"));
         JsonObject jo = new JsonObject();
-        if (n.getStatus() != MessageResult.Status.SUCCESS) {
-            jo.put("status", n.getStatus().toString());
-            jo.put("result", n.info.getText());
-            jo.put("errors", n.errorDetails);
+        maybeResult = ImporterRequest
+                .sendImportByTap( cbl
+                                , url
+                                , user
+                                , pw
+                                , xml
+                                , selector
+                                , address);
+        MessageResult<DefaultResult> n = maybeResult.orElseGet(() -> {
+            DefaultResult res = new DefaultResult();
+            String msg = "Error POST'ing to /xunit/import";
+            res.setText(msg);
+            MessageResult<DefaultResult> err = new MessageResult<>(res, null, MessageResult.Status.SEND_FAIL);
+            err.errorDetails = msg;
+            return err;
+        });
+        jo.put("status", n.getStatus().toString());
+        jo.put("result", n.info.getText());
+        jo.put("errors", n.errorDetails);
+        if (n.getStatus() == MessageResult.Status.SUCCESS)
             jo.put("new-xunit-path", xml.toString());
-        }
+        else
+            jo.put("new-xunit-path", "failed");
+
 
         return jo;
     }
