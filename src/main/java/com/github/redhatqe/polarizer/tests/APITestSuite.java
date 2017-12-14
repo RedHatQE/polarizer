@@ -8,12 +8,14 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.vertx.core.Handler;
-import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.ext.unit.TestOptions;
+import io.vertx.ext.unit.report.ReportOptions;
 import io.vertx.reactivex.core.AbstractVerticle;
-import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.core.eventbus.EventBus;
+import io.vertx.reactivex.core.eventbus.MessageConsumer;
+import io.vertx.reactivex.ext.unit.TestCompletion;
 import io.vertx.reactivex.ext.unit.TestContext;
 import io.vertx.reactivex.ext.unit.TestSuite;
-import io.vertx.reactivex.ext.web.client.WebClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,34 +25,40 @@ import java.io.IOException;
 
 public class APITestSuite extends AbstractVerticle {
     private TestSuite suite;
-    private Vertx vertx;
     private Logger logger = LogManager.getLogger(APITestSuite.class.getSimpleName());
     private int port;
-    private WebClientOptions cOpts;
-    private WebClient client;
     private APITestSuiteConfig sconfig;
+    private EventBus bus;
+    private MessageConsumer<String> testObserver;
 
     public void start() {
+        bus = vertx.eventBus();
         suite = TestSuite.create("API Tests");
+        logger.info(String.format("Bringing up %s Verticle", APITestSuite.class.getSimpleName()));
 
         port = this.config().getInteger("port", 9090);
-        logger.info(String.format("Running on port %d", this.port));
-
-        //cOpts = new WebClientOptions().setKeepAlive(true);
-        //client = WebClient.create(this.vertx, this.cOpts);
-
         // TODO: Make a service endpoint on Polarizer and have it send msg on Event bus
-        // so that we can run this test programmatically
-        String cfgPath = System.getenv("POLARIZER_TESTING");
-        try {
-            sconfig = Serializer.from(APITestSuiteConfig.class, new File(cfgPath));
-            if (sconfig.validate())
-                this.test();
-            else
-                logger.error("Some of the files in the test configuration do not exist");
-        } catch (IOException e) {
-            logger.error("Could not find configuration file.  Remember to set config path to POLARIZER_TESTING");
-        }
+        this.registerEventBus();
+    }
+
+    private void registerEventBus() {
+        String address = "APITestSuite"; //APITestSuite.class.getCanonicalName();
+        logger.info(String.format("Registering %s on event bus", address));
+        this.testObserver = this.bus.consumer(address);
+        this.testObserver.handler(msg -> {
+            String content = msg.body();
+            try {
+                this.sconfig = Serializer.from(APITestSuiteConfig.class, content);
+                if (sconfig.validate())
+                    this.test();
+                else
+                    logger.error("Some of the files in the test configuration do not exist");
+            } catch (IOException e) {
+                logger.error("Could not deserialize configuration file");
+            }
+        });
+        String vertName = APITestSuite.class.getSimpleName();
+        logger.info(String.format("%s Verticle now registered to event bus on address %s", vertName, address));
     }
 
     private Callback<JsonNode> defaultCallBack(TestContext ctx) {
@@ -80,10 +88,23 @@ public class APITestSuite extends AbstractVerticle {
      */
     public void test() {
         this.logger.info("================ Starting tests ================");
-        //suite.test("basic xunit generate test", this.testXunitGenerate());
-        suite.test("basic xunit import test", this.testXunitImport());
-        //suite.test("second xunit generate test", this.testXunitGenerate());
-        suite.run();
+        suite.test("basic xunit generate test", this.testXunitGenerate());
+        suite.test("second xunit generate test", this.testXunitGenerate());
+        //suite.test("basic xunit import test", this.testXunitImport());
+        //suite.test("second xunit import test", this.testXunitImport());
+
+        ReportOptions consoleReport = new ReportOptions().
+                setTo("console");
+
+        // Report junit files to the current directory
+        ReportOptions junitReport = new ReportOptions().
+                setTo("file:/test-output").
+                setFormat("junit");
+
+        TestCompletion results = suite.run(this.vertx, new TestOptions()
+                .addReporter(consoleReport)
+                .addReporter(junitReport)
+        );
     }
 
     private Handler<TestContext> testXunitImport() {

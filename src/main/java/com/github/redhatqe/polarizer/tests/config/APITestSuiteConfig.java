@@ -3,6 +3,7 @@ package com.github.redhatqe.polarizer.tests.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,8 @@ public class APITestSuiteConfig implements Validator {
     }
 
     public static void main(String... args) throws IOException {
-        APITestSuiteConfig cfg = Serializer.from(APITestSuiteConfig.class, "/home/stoner/testing-config.yml");
+        File f = new File(args[0]);
+        APITestSuiteConfig cfg = Serializer.from(APITestSuiteConfig.class, f);
         System.out.println(cfg.getXunit().getGenerate().getArgs());
     }
 }

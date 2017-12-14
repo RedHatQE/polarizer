@@ -7,8 +7,10 @@ import com.github.redhatqe.polarizer.tests.config.APITestSuiteConfig;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,6 +29,9 @@ public class MainVerticle extends AbstractVerticle {
     private Disposable dep;
 
     public void start() throws IOException {
+        VertxOptions opts = new VertxOptions();
+        opts.setBlockedThreadCheckInterval(120000);
+        this.vertx = Vertx.vertx(opts);
         DeploymentOptions pOpts = this.setupConfig(PolarizerVertConfig.class, POLARIZER_ENV, POLARIZER_PROP);
         DeploymentOptions tOpts = this.setupConfig(APITestSuiteConfig.class, TEST_ENV, TEST_PROP);
 
@@ -34,7 +39,7 @@ public class MainVerticle extends AbstractVerticle {
         dep = polarizerDeployer.subscribe(succ -> {
                     // Start the APITestSuite verticle once the Polarizer verticle is running
                     Single<String> deployed = vertx.rxDeployVerticle(TEST_VERT, tOpts);
-                    deployed.subscribe(next -> logger.info("Verticle is now deployed.  Running tests"),
+                    deployed.subscribe(next -> logger.info("APITestSuite Verticle is now deployed"),
                             err -> logger.error(err.getMessage()));
                     logger.info("Polarizer was deployed");
             },
