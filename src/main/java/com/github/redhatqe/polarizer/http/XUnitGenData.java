@@ -28,6 +28,25 @@ public class XUnitGenData {
         this.id = other.id;
     }
 
+    public XUnitGenData(UUID id) {
+        this.id = id;
+    }
+
+    public XUnitGenData(UUID id, String mapping) {
+        this(id);
+        this.mapping = mapping;
+    }
+
+    public XUnitGenData(String xunitPath, UUID id) {
+        this(id);
+        this.xunitPath = xunitPath;
+    }
+
+    public XUnitGenData(UUID id, XUnitConfig cfg) {
+        this(id);
+        this.config = new XUnitConfig(cfg);
+    }
+
     public boolean done() {
         return this.completed.containsAll(XUnitGenData.done);
     }
