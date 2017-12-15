@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 
 public class APITestSuite extends AbstractVerticle {
@@ -42,7 +43,7 @@ public class APITestSuite extends AbstractVerticle {
     }
 
     private void registerEventBus() {
-        String address = "APITestSuite"; //APITestSuite.class.getCanonicalName();
+        String address = APITestSuite.class.getCanonicalName();
         logger.info(String.format("Registering %s on event bus", address));
         this.testObserver = this.bus.consumer(address);
         this.testObserver.handler(msg -> {
@@ -87,18 +88,19 @@ public class APITestSuite extends AbstractVerticle {
      * Actually executes the test
      */
     public void test() {
+        String curr = Paths.get(".").toAbsolutePath().normalize().toString();
         this.logger.info("================ Starting tests ================");
-        suite.test("basic xunit generate test", this.testXunitGenerate());
-        suite.test("second xunit generate test", this.testXunitGenerate());
-        //suite.test("basic xunit import test", this.testXunitImport());
-        //suite.test("second xunit import test", this.testXunitImport());
+        //suite.test("basic xunit generate test", this.testXunitGenerate());
+        //suite.test("second xunit generate test", this.testXunitGenerate());
+        suite.test("basic xunit import test", this.testXunitImport());
+        suite.test("second xunit import test", this.testXunitImport());
 
         ReportOptions consoleReport = new ReportOptions().
                 setTo("console");
 
         // Report junit files to the current directory
         ReportOptions junitReport = new ReportOptions().
-                setTo("file:/test-output").
+                setTo(String.format("file:%s/test-output", curr)).
                 setFormat("junit");
 
         TestCompletion results = suite.run(this.vertx, new TestOptions()

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.redhatqe.polarizer.exceptions.InvalidArgumentType;
 import com.github.redhatqe.polarizer.processor.Meta;
 import com.github.redhatqe.polarizer.reporter.IdParams;
-import io.vertx.reactivex.core.file.FileSystem;
 import org.apache.camel.util.StringHelper;
 
 
@@ -16,7 +15,6 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class FileHelper implements IFileHelper {
@@ -86,6 +84,10 @@ public class FileHelper implements IFileHelper {
     }
 
     static public File makeTempFile(String dir, String pre, String suff, String perm) {
+        return FileHelper.makeTempPath(dir, pre, suff, perm).toFile();
+    }
+
+    static public Path makeTempPath(String dir, String pre, String suff, String perm) {
         if (perm == null)
             perm = "rw-rw----";
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString(perm);
@@ -98,7 +100,7 @@ public class FileHelper implements IFileHelper {
             e.printStackTrace();
             temp = new File(String.format("%s/tmp-%s%s", dir, pre, suff)).toPath();
         }
-        return temp.toFile();
+        return temp;
     }
 
     public static boolean deleteFile(String path) {
@@ -173,5 +175,11 @@ public class FileHelper implements IFileHelper {
             return acc;
         });
         return content;
+    }
+
+    public static void writeFile(Path path, String content) throws IOException {
+        try (BufferedWriter wr = Files.newBufferedWriter(path)) {
+            wr.write(content);
+        }
     }
 }

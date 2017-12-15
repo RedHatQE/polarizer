@@ -261,15 +261,8 @@ public class XUnitService {
         CIBusListener<DefaultResult> cbl = new CIBusListener<>(XUnitService.xunitMsgHandler(), brokerCfg);
         String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
         Optional<MessageResult<DefaultResult>> maybeResult;
-        JsonObject jo = new JsonObject();
-        maybeResult = ImporterRequest
-                .sendImportByTap( cbl
-                                , url
-                                , user
-                                , pw
-                                , xml
-                                , selector
-                                , address);
+
+        maybeResult = ImporterRequest.sendImportByTap( cbl, url, user, pw, xml, selector, address);
         MessageResult<DefaultResult> n = maybeResult.orElseGet(() -> {
             DefaultResult res = new DefaultResult();
             String msg = "Error POST'ing to /xunit/import";
@@ -278,6 +271,8 @@ public class XUnitService {
             err.errorDetails = msg;
             return err;
         });
+
+        JsonObject jo = new JsonObject();
         jo.put("status", n.getStatus().toString());
         jo.put("result", n.info.getText());
         jo.put("errors", n.errorDetails);
