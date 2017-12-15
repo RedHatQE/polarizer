@@ -1,8 +1,13 @@
 package com.github.redhatqe.polarizer.http;
 
 import com.github.redhatqe.polarizer.http.data.IComplete;
+import com.github.redhatqe.polarizer.http.data.TestCaseData;
+import com.github.redhatqe.polarizer.http.data.XUnitData;
+import com.github.redhatqe.polarizer.http.data.XUnitGenData;
 import com.github.redhatqe.polarizer.importer.XUnitService;
+import com.github.redhatqe.polarizer.reflector.MainReflector;
 import com.github.redhatqe.polarizer.reporter.XUnitReporter;
+import com.github.redhatqe.polarizer.reporter.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.reporter.configuration.data.XUnitConfig;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.tests.APITestSuite;
@@ -10,13 +15,16 @@ import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Future;
 import io.vertx.reactivex.core.WorkerExecutor;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.eventbus.EventBus;
+import io.vertx.reactivex.core.file.FileSystem;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerFileUpload;
 import io.vertx.reactivex.core.http.HttpServerRequest;
@@ -55,7 +63,36 @@ public class Polarizer extends AbstractVerticle {
                     try {
                         xargs = Serializer.from(XUnitConfig.class, buff.toString());
                         data.setConfig(xargs);
-                        data.getCompleted().add("xargs");
+                        data.addToComplete("xargs");
+                        emitter.onNext(data);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        emitter.onError(e);
+                    }
+                });
+    }
+
+    private <T extends IComplete, U> void
+    argsUploader( HttpServerFileUpload upload
+                , Tuple<String, UUID> t
+                , T data
+                , Class<U> cls
+                , Consumer<U> fn
+                , ObservableEmitter<T> emitter) {
+        // Instead of streaming to the filesystem then deserialize, just deserialize from buffer
+        // As the file upload chunks come in, the next handler will append them to buff.  Once we have a
+        // completion event, we can convert the buffer to a string, and deserialize into our object
+        Buffer buff = Buffer.buffer();
+        upload.toFlowable().subscribe(
+                buff::appendBuffer,
+                err -> logger.error(String.format("Could not upload %s file for %s", t.first, t.second.toString())),
+                () -> {
+                    logger.info(String.format("%s file for %s has been fully uploaded", t.first, t.second.toString()));
+                    U xargs;
+                    try {
+                        xargs = Serializer.from(cls, buff.toString());
+                        fn.accept(xargs);
+                        data.addToComplete(t.first);
                         emitter.onNext(data);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -104,7 +141,6 @@ public class Polarizer extends AbstractVerticle {
                             t = new Tuple<>("xunit", id);
                             data = new XUnitGenData(id);
                             this.fileUploader(upload, t, path, data, emitter, data::setXunitPath);
-                            emitter.onNext(data);
                             break;
                         case "xargs":
                             data = new XUnitGenData(id);
@@ -178,7 +214,6 @@ public class Polarizer extends AbstractVerticle {
                             Tuple<String, UUID> t = new Tuple<>("xunit", id);
                             data = new XUnitData(id);
                             this.fileUploader(upload, t, path, data, emitter, data::setXunitPath);
-                            emitter.onNext(data);
                             break;
                         case "xargs":
                             data = new XUnitGenData(id);
@@ -200,7 +235,7 @@ public class Polarizer extends AbstractVerticle {
      * @param rc context passed by server
      */
     private void xunitImport(RoutingContext rc) {
-        logger.info("In testcaseImport");
+        logger.info("In xunitImport");
         HttpServerRequest req = rc.request();
 
         UUID id = UUID.randomUUID();
@@ -214,7 +249,7 @@ public class Polarizer extends AbstractVerticle {
                         WorkerExecutor executor = vertx.createSharedWorkerExecutor("XUnitService.request");
                         executor.rxExecuteBlocking((Future<JsonObject> fut) -> {
                             try {
-                                JsonObject jo = XUnitService.request(xu.config);
+                                JsonObject jo = XUnitService.request(xu.getConfig());
                                 fut.complete(jo);
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -230,6 +265,71 @@ public class Polarizer extends AbstractVerticle {
                     logger.error(msg);
                     jo.put("status", "failed");
                     req.response().end(jo.encode());
+                });
+    }
+
+    private Observable<TestCaseData> makeTCMapperObservable(UUID id, HttpServerRequest req) {
+        return Observable.create(emitter -> {
+            try {
+                req.uploadHandler(upload -> {
+                    String fname = upload.name();
+                    TestCaseData data = new TestCaseData(id);
+                    Path path;
+                    Tuple<String, UUID> t;
+                    switch (fname) {
+                        case "jar":
+                            path = FileHelper.makeTempPath("/tmp", "jar-to-check-", ".jar", null);
+                            t = new Tuple<>("jar", id);
+                            this.fileUploader(upload, t, path, data, emitter, data::setJarToCheck);
+                            break;
+                        case "mapping":
+                            path = FileHelper.makeTempPath("/tmp","/tmp/mapping-", ".json", null);
+                            t = new Tuple<>("mapping", id);
+                            this.fileUploader(upload, t, path, data, emitter, data::setMapping);
+                            break;
+                        case "xargs":
+                            t = new Tuple<>("tcargs", id);
+                            this.argsUploader(upload, t, data, TestCaseConfig.class, data::setConfig, emitter);
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            } catch (Exception e) {
+                emitter.onError(e);
+            }
+        });
+    }
+
+    /**
+     *
+     * @param rc context passed by server
+     */
+    private void testCaseMapper(RoutingContext rc) {
+        logger.info("In testcaseMapper");
+        HttpServerRequest req = rc.request();
+
+        UUID id = UUID.randomUUID();
+        Observable<TestCaseData> s$ = this.makeTCMapperObservable(id, req);
+        s$.scan(TestCaseData::merge)
+                .subscribe(data -> {
+                    if (data.done()) {
+                        JsonObject jo;
+                        TestCaseConfig cfg = data.getConfig();
+                        try {
+                            jo = MainReflector.process(cfg);
+                            jo.put("result", "passed");
+                        } catch (IOException ex) {
+                            jo = new JsonObject();
+                            jo.put("result", "failed");
+                        }
+                        req.response().end(jo.encode());
+                    }
+                }, err -> {
+                    logger.error("Failed uploading necessary files");
+                    JsonObject jo = new JsonObject();
+                    jo.put("result", "error");
+                    jo.put("message", "Failed uploading necessary files");
                 });
     }
 
@@ -277,7 +377,7 @@ public class Polarizer extends AbstractVerticle {
         int portNumber = config().getInteger(CONFIG_HTTP_SERVER_PORT, 9090);
         server.requestHandler(req -> {
             req.setExpectMultipart(true);
-            //router.route("/testcase/mapper").method(HttpMethod.POST).handler(this::testCaseMapper);
+            router.route("/testcase/mapper").method(HttpMethod.POST).handler(this::testCaseMapper);
             router.post("/xunit/generate").handler(this::xunitGenerator);
             router.post("/xunit/import").handler(this::xunitImport);
             router.post("/testcase/import").handler(this::testcaseImport);

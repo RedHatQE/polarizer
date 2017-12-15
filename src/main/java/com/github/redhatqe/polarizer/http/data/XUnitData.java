@@ -1,6 +1,5 @@
-package com.github.redhatqe.polarizer.http;
+package com.github.redhatqe.polarizer.http.data;
 
-import com.github.redhatqe.polarizer.http.data.IComplete;
 import com.github.redhatqe.polarizer.reporter.configuration.data.XUnitConfig;
 
 import java.util.Arrays;
@@ -8,11 +7,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class XUnitData implements IComplete {
-    protected Set<String> completed;
+public class XUnitData extends PolarizerData {
     protected String xunitPath;
     protected XUnitConfig config;
-    protected UUID id;
     private static final String[] _done = {"xunit", "xargs"};
     public static final Set<String> done = new HashSet<>(Arrays.asList(_done));
 
@@ -58,22 +55,6 @@ public class XUnitData implements IComplete {
         this.config = new XUnitConfig(cfg);
     }
 
-    public boolean done() {
-        return this.completed.containsAll(XUnitData.done);
-    }
-
-    public int size() {
-        return XUnitData.done.size();
-    }
-
-    public Set<String> getCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(Set<String> completed) {
-        this.completed = completed;
-    }
-
     public String getXunitPath() {
         return xunitPath;
     }
@@ -90,21 +71,13 @@ public class XUnitData implements IComplete {
         this.config = config;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
+    @Override
+    public boolean done() {
+        return this.completed.containsAll(XUnitData.done);
     }
 
     @Override
-    public Set<String> completed() {
-        return this.completed;
-    }
-
-    @Override
-    public void addToComplete(String s) {
-        this.completed.add(s);
+    public int size() {
+        return XUnitData.done.size();
     }
 }

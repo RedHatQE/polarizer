@@ -90,10 +90,10 @@ public class APITestSuite extends AbstractVerticle {
     public void test() {
         String curr = Paths.get(".").toAbsolutePath().normalize().toString();
         this.logger.info("================ Starting tests ================");
-        //suite.test("basic xunit generate test", this.testXunitGenerate());
-        //suite.test("second xunit generate test", this.testXunitGenerate());
-        suite.test("basic xunit import test", this.testXunitImport());
-        suite.test("second xunit import test", this.testXunitImport());
+        suite.test("basic xunit generate test", this.testXunitGenerate());
+        suite.test("second xunit generate test", this.testXunitGenerate());
+        //suite.test("basic xunit import test", this.testXunitImport());
+        //suite.test("second xunit import test", this.testXunitImport());
 
         ReportOptions consoleReport = new ReportOptions().
                 setTo("console");

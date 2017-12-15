@@ -1,4 +1,4 @@
-package com.github.redhatqe.polarizer.http;
+package com.github.redhatqe.polarizer.http.data;
 
 import com.github.redhatqe.polarizer.reporter.configuration.data.XUnitConfig;
 
