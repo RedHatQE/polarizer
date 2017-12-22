@@ -3,6 +3,7 @@ package com.github.redhatqe.polarizer;
 import com.github.redhatqe.polarizer.http.Polarizer;
 import com.github.redhatqe.polarizer.http.config.PolarizerVertConfig;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
+import com.github.redhatqe.polarizer.tests.APITestSuite;
 import com.github.redhatqe.polarizer.tests.config.APITestSuiteConfig;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
@@ -19,10 +20,10 @@ import java.io.IOException;
 
 public class MainVerticle extends AbstractVerticle {
     private static Logger logger = LogManager.getLogger(Polarizer.class.getSimpleName());
-    public static final String POLARIZER_VERT = "com.github.redhatqe.polarizer.http.Polarizer";
+    public static final String POLARIZER_VERT = Polarizer.class.getCanonicalName();
     public static final String POLARIZER_ENV = "POLARIZER_MAIN_CONFIG";
     public static final String POLARIZER_PROP = "polarizer.main.config";
-    public static final String TEST_VERT = "com.github.redhatqe.polarizer.tests.APITestSuite";
+    public static final String TEST_VERT = APITestSuite.class.getCanonicalName();
     public static final String TEST_ENV = "POLARIZER_TEST_CONFIG";
     public static final String TEST_PROP = "polarizer.test.config";
 

@@ -15,7 +15,6 @@ import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -24,7 +23,6 @@ import io.vertx.reactivex.core.Future;
 import io.vertx.reactivex.core.WorkerExecutor;
 import io.vertx.reactivex.core.buffer.Buffer;
 import io.vertx.reactivex.core.eventbus.EventBus;
-import io.vertx.reactivex.core.file.FileSystem;
 import io.vertx.reactivex.core.http.HttpServer;
 import io.vertx.reactivex.core.http.HttpServerFileUpload;
 import io.vertx.reactivex.core.http.HttpServerRequest;
@@ -45,32 +43,6 @@ public class Polarizer extends AbstractVerticle {
     public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
     public static final String UPLOAD_DIR = "/tmp";
     private EventBus bus;
-
-    private <T extends XUnitData> void
-    xargsUploader( HttpServerFileUpload upload
-                 , T data
-                 , ObservableEmitter<T> emitter) {
-        // Instead of streaming to the filesystem then deserialize, just deserialize from buffer
-        // As the file upload chunks come in, the next handler will append them to buff.  Once we have a
-        // completion event, we can convert the buffer to a string, and deserialize into our object
-        Buffer buff = Buffer.buffer();
-        upload.toFlowable().subscribe(
-                buff::appendBuffer,
-                err -> logger.error("Could not upload xargs file"),
-                () -> {
-                    logger.info(String.format("xargs json for %s has been fully uploaded", data.getId().toString()));
-                    XUnitConfig xargs;
-                    try {
-                        xargs = Serializer.from(XUnitConfig.class, buff.toString());
-                        data.setConfig(xargs);
-                        data.addToComplete("xargs");
-                        emitter.onNext(data);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        emitter.onError(e);
-                    }
-                });
-    }
 
     private <T extends IComplete, U> void
     argsUploader( HttpServerFileUpload upload
@@ -144,7 +116,8 @@ public class Polarizer extends AbstractVerticle {
                             break;
                         case "xargs":
                             data = new XUnitGenData(id);
-                            this.xargsUploader(upload, data, emitter);
+                            t = new Tuple<>("xargs", id);
+                            this.argsUploader(upload, t, data, XUnitConfig.class, data::setConfig, emitter);
                             break;
                         case "mapping":
                             path = FileHelper.makeTempPath("/tmp", "mapping-", ".json", null);
@@ -179,6 +152,7 @@ public class Polarizer extends AbstractVerticle {
 
                         JsonObject jo = new JsonObject();
                         try {
+                            // TODO: This could be a huge file, so we should use an async read file
                             jo.put("newxunit", FileHelper.readFile(config.getNewXunit()));
                             jo.put("status", "passed");
                             req.response().end(jo.encode());
@@ -208,16 +182,18 @@ public class Polarizer extends AbstractVerticle {
                 req.uploadHandler(upload -> {
                     String fname = upload.name();
                     XUnitData data;
+                    Tuple<String, UUID> t;
                     switch (fname) {
                         case "xunit":
                             Path path = FileHelper.makeTempPath("/tmp", "polarion-result-", ".xml", null);
-                            Tuple<String, UUID> t = new Tuple<>("xunit", id);
+                            t = new Tuple<>("xunit", id);
                             data = new XUnitData(id);
                             this.fileUploader(upload, t, path, data, emitter, data::setXunitPath);
                             break;
                         case "xargs":
                             data = new XUnitGenData(id);
-                            this.xargsUploader(upload, data, emitter);
+                            t = new Tuple<>("xargs", id);
+                            this.argsUploader(upload, t, data, XUnitConfig.class, data::setConfig, emitter);
                             break;
                         default:
                             break;
@@ -268,6 +244,7 @@ public class Polarizer extends AbstractVerticle {
                 });
     }
 
+    // FIXME: This seems to hang while uploading or reading in the jar file
     private Observable<TestCaseData> makeTCMapperObservable(UUID id, HttpServerRequest req) {
         return Observable.create(emitter -> {
             try {

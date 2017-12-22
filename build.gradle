@@ -1,6 +1,18 @@
 buildscript {
     repositories {
         jcenter()
+        maven {
+            url 'https://oss.jfrog.org/artifactory/plugins-release'
+            credentials {
+                username = "${artifactory_user}"
+                password = "${artifactory_password}"
+            }
+        }
+
+    }
+    dependencies {
+        //Check for the latest version here: http://plugins.gradle.org/plugin/com.jfrog.artifactory
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4+"
     }
 }
 
@@ -20,7 +32,7 @@ repositories {
 }
 
 group = 'com.github.redhatqe.polarizer'
-version = '0.2.0'
+version = '0.2.2'
 def mainClassName = "io.vertx.core.Launcher"
 sourceCompatibility = 1.8
 
@@ -81,13 +93,16 @@ dependencies {
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.github.redhatqe.polarize:polarize-meta:0.1.0'
-    compile 'com.github.redhatqe.polarizer:reporter:0.2.0-SNAPSHOT'
+    compile 'com.github.redhatqe.polarizer:reporter:0.2.1'
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.3'
 }
 
+allprojects {
+    apply plugin: "com.jfrog.artifactory"
+}
 
 shadowJar {
     classifier = 'fat'
@@ -166,6 +181,26 @@ bintray {
         }
     }
     publications = ['MyPublication']
+}
+
+artifactory {
+    contextUrl = "${artifactory_contextUrl}"   //The base Artifactory URL if not overridden by the publisher/resolver
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local'
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+            maven = true
+        }
+    }
+    resolve {
+        repository {
+            repoKey = 'plugins-release'
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+            maven = true
+        }
+    }
 }
 
 // Create the pom configuration:
