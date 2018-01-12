@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.redhatqe.polarizer.messagebus.config.Broker;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.exceptions.NoConfigFoundError;
-import com.github.redhatqe.polarizer.utils.ArgHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -360,15 +359,45 @@ public class CIBusListener<T> extends CIBusClient implements ICIBus, IMessageLis
     }
 
 
-    public static void mainTest(String[] args) {
-        try {
-            CIBusListener.test(args);
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (JMSException e) {
-            e.printStackTrace();
+    /**
+     * Does 2 things: launches waitForMessage from a Fork/Join pool thread and the main thread waits for user to quit
+     *
+     * Takes one argument: a string that will be used as the JMS Selector
+     *
+     * @param args
+     */
+    public static void main(String[] args) throws ExecutionException, InterruptedException, JMSException {
+        // FIXME: Use guice to make something that is an IMessageListener so we can mock it out
+        CIBusListener<DefaultResult> bl = new CIBusListener<>();
+
+        Broker b = bl.brokerConfig.getBrokers().get("ci");
+        b.setMessageMax(1);
+
+        Map<String, String> props = new HashMap<>();
+        props.put("rhsm_qe", "polarize_bus");
+
+        String sel = "rhsm_qe='polarize_bus'";
+        String publishDest = String.format("Consumer.%s.%s", bl.clientID, TOPIC);
+        Optional<Connection> rconn = bl.tapIntoMessageBus(sel, bl.createListener(bl.messageParser()), publishDest);
+
+        bl.listenUntil(10000L);
+        MessageResult<DefaultResult> result = bl.messages.remove();
+        if (result.getNode().isPresent()) {
+            ObjectNode node = result.getNode().get();
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode testing = node.get("root");
+            bl.logger.info(testing.asText());
         }
+        else
+            bl.logger.error("No message node");
+
+        rconn.ifPresent((Connection c) -> {
+            try {
+                bl.logger.info("Closing the receiver connection");
+                c.close();
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

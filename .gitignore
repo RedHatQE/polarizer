@@ -4,4 +4,6 @@
 build/
 logs/
 out/
+gradle/
 test-output/
+gradle.properties

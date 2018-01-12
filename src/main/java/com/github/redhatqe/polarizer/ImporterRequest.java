@@ -137,19 +137,20 @@ public class ImporterRequest {
         }
 
         if (response != null)
-            ImporterRequest.printBody(response);
+            System.out.println(ImporterRequest.getBody(response));
         return response;
     }
 
-    private static void printBody(HttpResponse response) {
+    private static String getBody(HttpResponse response) {
         HttpEntity entity = response.getEntity();
+        String body = "";
         try {
             BufferedReader bfr = new BufferedReader(new InputStreamReader(entity.getContent()));
-            System.out.println(bfr.lines().collect(Collectors.joining("\n")));
+            body = bfr.lines().collect(Collectors.joining("\n"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(response.toString());
+        return body;
     }
 
     private static Optional<File> getBody(HttpResponse response, String path) {
@@ -158,11 +159,9 @@ public class ImporterRequest {
             return Optional.empty();
         }
 
-        HttpEntity entity = response.getEntity();
         Path file = null;
         try {
-            BufferedReader bfr = new BufferedReader(new InputStreamReader(entity.getContent()));
-            String body = bfr.lines().collect(Collectors.joining("\n"));
+            String body = getBody(response);
             System.out.println(body);
 
             file = Paths.get(path);
@@ -191,6 +190,8 @@ public class ImporterRequest {
 
         logger.info("Making import request as user: " + user);
         CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
+        // TODO: Get the body of the message which should contain a job ID.  We can use the Job ID to track it in the
+        // new Polarion Queue browser
         if (resp != null)
             logger.info(resp.toString());
         else
@@ -202,6 +203,13 @@ public class ImporterRequest {
             msg.errorDetails = resp.getStatusLine().getReasonPhrase();
         }
         else {
+            String body = ImporterRequest.getBody(resp);
+            logger.info(body);
+
+            // FIXME: Do we really want to spin here?  We can be notified when the response message comes in another
+            // way.  Make the message listener a service that runs, and it will do something (eg send email, update
+            // database, update browser, etc) when message arrives or times out.  If it times out, make a request to the
+            // queue browser to see if the request is stuck in the queue
             cbl.listenUntil(1);
         }
 

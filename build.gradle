@@ -32,7 +32,7 @@ repositories {
 }
 
 group = 'com.github.redhatqe.polarizer'
-version = '0.2.2'
+version = '0.2.2-SNAPSHOT'
 def mainClassName = "io.vertx.core.Launcher"
 sourceCompatibility = 1.8
 
@@ -97,7 +97,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.3'
+    gradleVersion = '4.4.1'
 }
 
 allprojects {
@@ -107,24 +107,9 @@ allprojects {
 shadowJar {
     classifier = 'fat'
     manifest {
-        attributes("Main-Verticle": "com.github.redhatqe.polarizer.MainVerticle",
-                   "Main-Class": mainClassName)
-    }
-    mergeServiceFiles {
-        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+        attributes("Main-Class": "com.github.redhatqe.polarizer.messagebus.CIBusListener")
     }
 }
-
-/*
-run {
-    args = [ 'run'
-           , mainVerticleName
-           , "--redeploy=${watchForChange}"
-           , "--launcher-class=${mainClassName}"
-           , "--on-redeploy=${doOnChange}"
-           ]
-}
-*/
 
 
 // Had to add the -quiet option when creating the javadocs for Java 8, or creation will fail
@@ -151,56 +136,9 @@ artifacts {
     archives jar, sourceJar, javadocJar, shadowJar
 }
 
+
 signing {
     sign configurations.archives
-}
-
-bintray {
-    user = credsBintray.user
-    key = credsBintray.pw
-    override = true
-    publish = true
-    pkg {
-        repo = 'polarizer'
-        name = 'polarizer'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/rarebreed/reporter.git'
-        version {
-            name = "${version}"
-            desc = 'Data definitions for xunit and testcase for polarize.  TestNG Reporter'
-            released  = new Date()
-            gpg {
-                sign = true //Determines whether to GPG sign the files. The default is false
-            }
-            mavenCentralSync {
-                sync = true //[Default: true] Determines whether to sync the version to Maven Central.
-                user =  "${credsOssrh.user}" //OSS user token: mandatory
-                password = "${credsOssrh.pw}" //OSS user password: mandatory
-                close = '1' //Optional property. By default the staging repository is closed and artifacts are released to Maven Central. You can optionally turn this behaviour off (by puting 0 as value) and release the version manually.
-            }
-        }
-    }
-    publications = ['MyPublication']
-}
-
-artifactory {
-    contextUrl = "${artifactory_contextUrl}"   //The base Artifactory URL if not overridden by the publisher/resolver
-    publish {
-        repository {
-            repoKey = 'oss-snapshot-local'
-            username = "${artifactory_user}"
-            password = "${artifactory_password}"
-            maven = true
-        }
-    }
-    resolve {
-        repository {
-            repoKey = 'plugins-release'
-            username = "${artifactory_user}"
-            password = "${artifactory_password}"
-            maven = true
-        }
-    }
 }
 
 // Create the pom configuration:
@@ -228,12 +166,12 @@ def pomConfig = {
 
 publishing {
     publications {
-        MyPublication(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
             artifact sourceJar
             artifact javadocJar
-            groupId 'com.github.redhatqe.polarizer'
-            artifactId 'polarizer'
+            groupId project.group
+            artifactId project.name
             version "${version}"
             pom.withXml {
                 def root = asNode()
@@ -243,5 +181,77 @@ publishing {
                 root.children().last() + pomConfig
             }
         }
+    }
+}
+
+bintray {
+    user = credsBintray.user
+    key = credsBintray.pw
+    override = true
+    publish = true
+    pkg {
+        repo = project.name
+        name = project.name
+        licenses = ['Apache-2.0']
+        vcsUrl = projectURL
+        version {
+            name = "${version}"
+            desc = 'Data definitions for xunit and testcase for polarize.  TestNG Reporter'
+            released  = new Date()
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+            }
+            mavenCentralSync {
+                sync = true //[Default: true] Determines whether to sync the version to Maven Central.
+                user =  "${credsOssrh.user}" //OSS user token: mandatory
+                password = "${credsOssrh.pw}" //OSS user password: mandatory
+                close = '1' //Optional property. By default the staging repository is closed and artifacts are released to Maven Central. You can optionally turn this behaviour off (by puting 0 as value) and release the version manually.
+            }
+        }
+    }
+    publications = ['mavenJava']
+}
+
+artifactory {
+    contextUrl = "${artifactory_contextUrl}"   //The base Artifactory URL if not overridden by the publisher/resolver
+    publish {
+        repository {
+            repoKey = version.endsWith("SNAPSHOT") ? "oss-snapshot-local" : "oss-release-local"
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+            maven = true
+        }
+        defaults {
+            //List of Gradle Configurations (names or objects) from which to collect the list of artifacts to be deployed to Artifactory.
+            // The publications tells what files (artifacts) to upload
+            publications('mavenJava')
+
+            //properties = ['qa.level': 'basic', 'q.os': 'win32, deb, osx']  //Optional map of properties to attach to all published artifacts
+            /*
+            The properties closure in the "defaults" task uses the following syntax:
+            properties {
+                publicationName 'group:module:version:classifier@type', key1:'value1', key2:'value2', ...
+            }*/
+
+            publishBuildInfo = true   //Publish build-info to Artifactory (true by default)
+            publishArtifacts = true   //Publish artifacts to Artifactory (true by default)
+            publishPom = true   //Publish generated POM files to Artifactory (true by default).
+            publishIvy = true   //Publish generated Ivy descriptor files to Artifactory (true by default).
+        }
+    }
+    resolve {
+        repository {
+            repoKey = version.endsWith("SNAPSHOT") ? "libs-snapshot" : "libs-release"
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+            maven = true
+        }
+    }
+}
+
+task showFiles {
+    doLast {
+        println components.java
+        println configurations.archives.files
     }
 }
