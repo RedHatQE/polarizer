@@ -1,5 +1,7 @@
 package com.github.redhatqe.polarizer.reporter;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -7,7 +9,9 @@ import java.util.List;
  * Created by stoner on 10/5/16.
  */
 public class IdParams {
+    @JsonProperty
     public String id = "";
+    @JsonProperty
     public List<String> parameters = null;
 
     public String getId() {

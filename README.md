@@ -14,22 +14,29 @@ Most of the above is still true for polarizer.  However, it no longer automatica
 and instead of keeping the map file in synch and possibly making TestCase import requests at compile time, this is now
 delegated to runtime.
 
+The bigger news is that polarizer is more modular (with eventual plans to use Java 9 modules) by splitting out several
+tasks to their own projects.  For example, the metadata is split out into the [metatdata][-metadata] project, the 
+xunit generation into the [reporter][-reporter] project, the web services into the [polarizer-vertx][-pvertx] 
+project, and the Unified Message Bus library in the []
+
 ## Why a new version?
 
-While polarize got the job done, it was just too complex and wieldy, so I looked at several things to see what I could
-do to make things easier:
+While polarize got the job done, it was just too complex and wieldy.  Also, it was very tightly married to the java 
+platform which has hindered its adoption. So I looked at several things to see what I could do to make things easier:
 
 - polarizer will run as a web service instead of as a standalone project running at compile time
   - Currently targeting REST, but also looking at websockets and GraphQL
 - Simple API
-  - createMapping: given a jar file and a mapping file, return a new mapping file
-  - createTestDefinition: given a jar file, a map file, and a json request, return TestCase XML definitions
-  - testCaseImport: given a TestCase XML file and map file, make request to Polarion returning a new mapping file
-  - xunitImport: given an xunit file, make request to Polarion and return response
+  - Create Mapping: given a jar file and a mapping file, return a new mapping file
+  - TestCase Import: given a TestCase XML file and map file, make request to Polarion returning a new mapping file
+  - Xunit Import: given an xunit file, make request to Polarion and return response
+  - Create Xunit: given a mapping file and a regular xunit file, return an xunit file compatible with /import/xunit
   
 Future APIs on the roadmap:
 
-- createXunit: given a mapping file and a regular xunit file, return an xunit file compatible with /import/xunit
+- Create TestDefinition: 
+  - For java: Given a jar file, a map file, and a json request, return TestCase XML definitions
+  - For non-java: Given source code, a map file, and a json request, return TestCase XML definitions
 - All the above APIs but for projects using a metadata file instead of a jar file
   - Allows projects in other languages to only need to supply a JSON metadata form
 
@@ -40,9 +47,14 @@ is just a service that other clients can make requests for.
 
 A brief primer on libraries other java teams can make use of
 
-### Unified Message Bus library
+### Unified Message Bus library for Java
 
-On top of the above API, polarizer also comes with a Unified Message Bus client.  Currently, if another application
+While the redhat-ci-jenkins plugin is definitely useful, it's also not flexible.  Ideally, a higher level library
+should have been created and the jenkins plugin would have been written to use this.  In other words, the plugin would
+have just been another client making use of the library.  Had this strategy been followed, other teams with other 
+requirements (for example, not testing on jenkins or with other workflows) could have made use of it too. 
+
+So onn top of the above API, polarizer also comes with a Unified Message Bus client.  Currently, if another application
 wants to make use of this library, they would need to follow the directions for setting up their own TLS cert and 
 getting the appropriate permissions.  This is not needed if they only wish to make use of listening for messages on the
 UMB that are published from the following queue Destination:
@@ -173,3 +185,6 @@ this a Java 9 modular system soon).  The package structure is as follows:
   - processor: classes that manipulate and process the metadata and help updating the mapping file
   - reflector: classes that use reflection on the jar to get the metadata from annotations and handle testcase imports
   - 
+
+[-reporter]: https://github.com/rarebreed/reporter
+[-metadata]: https://github.com/RedHatQE/metadata

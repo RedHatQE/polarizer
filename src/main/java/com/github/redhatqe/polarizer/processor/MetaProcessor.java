@@ -116,7 +116,7 @@ public class MetaProcessor {
         Transformer<List<Parameter>, TestStepColumn> parameterize = args -> {
             TestStepColumn col = new TestStepColumn();
             col.setId("step");
-            args.forEach(a -> col.getContent().add(a));
+            args.forEach(a -> col.getParameter().add(a));
             return col;
         };
 

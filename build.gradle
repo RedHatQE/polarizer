@@ -23,6 +23,7 @@ plugins {
     id "maven-publish"
     id "signing"
     id "com.jfrog.bintray" version "1.7.3"
+    id "com.jfrog.artifactory" version "4.6.2"
 }
 
 repositories {
@@ -93,7 +94,8 @@ dependencies {
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.github.redhatqe.polarize:polarize-meta:0.1.0'
-    compile 'com.github.redhatqe.polarizer:reporter:0.2.1'
+    compile 'com.github.redhatqe.polarizer:reporter:0.2.3-SNAPSHOT'
+    compile 'com.github.redhatqe.polarizer:polarizer-umb:0.1.0-SNAPSHOT'
 }
 
 task wrapper(type: Wrapper) {
