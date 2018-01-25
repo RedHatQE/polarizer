@@ -1,7 +1,7 @@
 # what is polarizer?
 
-polarizer is the second generation of polarize. For those not aware of what polarize is, polarizer is an ongoing 
-improvement aimed to do the following:
+polarizer is the second generation of polarize. For those not aware of what polarize is, polarize essentially did the
+following:
 
 - Associate in the source code all the metadata about a TestCase
 - From the annotated metadata, generate an XML definition file compatible with the Polarion TestCase Importer
@@ -10,9 +10,23 @@ improvement aimed to do the following:
 - A Message Bus library to listen for reply messages for the import requests
 - When java projects get compiled the XML test definitions and mapping.json files gets updated
 
-Most of the above is still true for polarizer.  However, it no longer automatically generates the XML definition files,
-and instead of keeping the map file in synch and possibly making TestCase import requests at compile time, this is now
-delegated to runtime.
+Most of the above is still true for polarizer.  However, polarizer is actually a set of related projects aiming to do
+the following:
+
+| Job             | Project         | Description                                                                                    |
+|-----------------|-----------------|------------------------------------------------------------------------------------------------|
+| Metadata        | metadata        | Java annotations and python decorators to describe things like TestCase or other test metadata |
+| Xunit Generator | reporter        | Java classes that will generate xunit reports compliant with Polarion                          |
+| Message Bus     | polarizer-umb   | Java classes to both publish and send to the required Topic on the UMB                         |
+| XML Definitions | polarizer       | Given a jar file and a mapping file, create the XML TestCase files for new/updated tests       |
+| TestCase Import | polarizer-vertx | Web Service: Given the XML TestCase xml file, upload to Polarion                               |
+| Xunit Import    | polarizer-vertx | Web Service: Given the xunit result file, upload to Polarion                                   |
+| Map Generator   | polarizer-vertx | Web Service: Given a jar and map file, determine if TC import needed, and return new map file  |
+| XUnit Generator | polarizer-vertx | Web Service: Given an xunit file and a mapfile, return xunit compatible with Polarion          |
+
+So the new setup no longer assumes that polarize will be run locally at compile.  This means that it no longer 
+automatically generates the XML definition files, and instead of keeping the map file in synch and possibly making 
+TestCase import requests at compile time, this is now delegated to runtime.
 
 The bigger news is that polarizer is more modular (with eventual plans to use Java 9 modules) by splitting out several
 tasks to their own projects.  For example, the metadata is split out into the [metatdata][-metadata] project, the 
@@ -22,10 +36,13 @@ project, and the Unified Message Bus library in the []
 ## Why a new version?
 
 While polarize got the job done, it was just too complex and wieldy.  Also, it was very tightly married to the java 
-platform which has hindered its adoption. So I looked at several things to see what I could do to make things easier:
+platform which has hindered its adoption.  When the Message Bus was changed to use the new Unified Message Bus, this 
+also added some difficulties due to it requiring TLS certificates and that there was not a plugin to listen for the
+TestCase imports response messages. So I looked at several things to see what I could do to make things easier:
 
 - polarizer will run as a web service instead of as a standalone project running at compile time
   - Currently targeting REST, but also looking at websockets and GraphQL
+  - Allows non-Java teams to be able to use it
 - Simple API
   - Create Mapping: given a jar file and a mapping file, return a new mapping file
   - TestCase Import: given a TestCase XML file and map file, make request to Polarion returning a new mapping file
@@ -42,6 +59,14 @@ Future APIs on the roadmap:
 
 The one thing polarizer was meant to do was to get away from the mentality of a stand-alone program.  Instead, polarizer
 is just a service that other clients can make requests for.
+
+## Polarizer infrastructure
+
+Now that polarizer as a tool is a web service, this implies setting up the infrastructure for it (ie, provisioning a 
+server for polarizer to run on).  The actual project which is the web service is called polarizer-vertx (since it uses
+the vertx framework), and there is an ansible playbook called polarizer.yml to setup a polarizer-vertx server.
+
+Due to some internal servers, this playbook is not hosted on github, although eventually this should be possible.
 
 ## polarizer goodies
 
