@@ -35,14 +35,23 @@ project, and the Unified Message Bus library in the []
 
 ## Why a new version?
 
-While polarize got the job done, it was just too complex and wieldy.  Also, it was very tightly married to the java 
-platform which has hindered its adoption.  When the Message Bus was changed to use the new Unified Message Bus, this 
-also added some difficulties due to it requiring TLS certificates and that there was not a plugin to listen for the
-TestCase imports response messages. So I looked at several things to see what I could do to make things easier:
+While polarize got the job done, it had a lot of disadvantages:
 
-- polarizer will run as a web service instead of as a standalone project running at compile time
-  - Currently targeting REST, but also looking at websockets and GraphQL
+- It was just too complex and wieldy, especially the parser to edit the config.xml file
+- It was very tightly married to the java platform which has hindered its adoption
+- For clojure, its testcases had to be generated at runtime anyway
+- The new Unified Message Bus added some difficulties due to it requiring TLS certificates 
+  - There was not a plugin like redhat-ci-plugin to send/listen for the TestCase imports 
+  
+So, now polarizer runs as a web service, meaning that it's functionality is done at runtime now.  This will allow non
+Java teams to be able to user polarizer, once a few other things are in place (such as python decorators which are the
+functional equivalent of the Java annotations, and an import load hook to find the decorations).  Also, as long as a 
+team has a similar mapping file, they can now generate a Polarion-compliant Xunit xml file.  The advantages are many:
+
+- polarizer will run as a web service
+  - Clients just need to make REST calls (but also looking at websockets and GraphQL)
   - Allows non-Java teams to be able to use it
+  - The bash scripts in the Build Steps of the jobs have been drastically simplified
 - Simple API
   - Create Mapping: given a jar file and a mapping file, return a new mapping file
   - TestCase Import: given a TestCase XML file and map file, make request to Polarion returning a new mapping file
@@ -213,3 +222,4 @@ this a Java 9 modular system soon).  The package structure is as follows:
 
 [-reporter]: https://github.com/rarebreed/reporter
 [-metadata]: https://github.com/RedHatQE/metadata
+[-pvertx]: https://github.com/Polarizer-Projects/polarizer-vertx
