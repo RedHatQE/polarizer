@@ -4,6 +4,7 @@ import com.github.redhatqe.polarizer.messagebus.CIBusListener;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.reporter.jaxb.IJAXBHelper;
 import com.github.redhatqe.polarizer.reporter.jaxb.JAXBHelper;
+import com.github.redhatqe.polarizer.reporter.utils.Tuple;
 import com.github.redhatqe.polarizer.utils.IFileHelper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -54,7 +55,13 @@ public class ImporterRequest {
      * @param <T> type of t
      * @return response from sending request
      */
-    public static <T> CloseableHttpResponse post(T t, Class<T> tclass, String url, String xml, String user, String pw) {
+    public static <T> CloseableHttpResponse
+    post( T t
+        , Class<T> tclass
+        , String url
+        , String xml
+        , String user
+        , String pw) {
         JAXBHelper jaxb = new JAXBHelper();
         File importerFile = new File(xml);
         IFileHelper.makeDirs(importerFile.toPath());
@@ -77,7 +84,11 @@ public class ImporterRequest {
      * @param pw password for user
      * @return http response
      */
-    public static CloseableHttpResponse post(String url, File importerFile , String user, String pw) {
+    public static CloseableHttpResponse
+    post( String url
+        , File importerFile
+        , String user
+        , String pw) {
         CloseableHttpResponse response = null;
         if (!importerFile.exists()) {
             logger.error(String.format("%s did not exist", importerFile.toString()));
@@ -177,6 +188,49 @@ public class ImporterRequest {
             return Optional.of(file.toFile());
     }
 
+    public static <T> Tuple<Optional<MessageResult<T>>, Optional<Connection>>
+    sendImport( CIBusListener<T> cbl
+              , String url
+              , String user
+              , String pw
+              , File reportPath
+              , String selector
+              , String address) {
+        Tuple<Optional<MessageResult<T>>, Optional<Connection>> result = new Tuple<>();
+        result.second = cbl.tapIntoMessageBus(selector, cbl.createListener(cbl.messageParser()), address);
+        MessageResult<T> msg;
+
+        logger.info("Making import request as user: " + user);
+        CloseableHttpResponse resp = ImporterRequest.post(url, reportPath, user, pw);
+        if (resp != null)
+            logger.info(resp.toString());
+        else {
+            result.first = Optional.empty();
+            return result;
+        }
+
+        // TODO: Get the body of the message for its job ID.  Use the Job ID to track it in the Polarion Queue Browser
+        msg = new MessageResult<>(null, MessageResult.Status.FAILED);
+        result.first = Optional.of(msg);
+        int stat = resp.getStatusLine().getStatusCode();
+        if (stat != 200) {
+            logger.error("Problem sending POST request");
+            msg.setErrorDetails(resp.getStatusLine().getReasonPhrase());
+        }
+        else {
+            String body = ImporterRequest.getBody(resp);
+            logger.info(body);
+            msg.setStatus(MessageResult.Status.PENDING);
+            msg.setBody(body);
+
+            // FIXME: Do we really want to spin here?  We can be notified when the response message comes in another
+            // way.  Make the message listener a service that runs, and it will do something (eg send email, update
+            // database, update browser, etc) when message arrives or times out.  If it times out, make a request to the
+            // queue browser to see if the request is stuck in the queue
+        }
+        return result;
+    }
+
     public static <T> Optional<MessageResult<T>>
     sendImportByTap( CIBusListener<T> cbl
                    , String url
@@ -197,14 +251,17 @@ public class ImporterRequest {
         else
             return Optional.empty();
 
-        if (resp.getStatusLine().getStatusCode() != 200) {
+        msg = new MessageResult<>(null, MessageResult.Status.FAILED);
+        int stat = resp.getStatusLine().getStatusCode();
+        if (stat != 200) {
             logger.error("Problem sending POST request");
-            msg = new MessageResult<>(null, MessageResult.Status.FAILED);
-            msg.errorDetails = resp.getStatusLine().getReasonPhrase();
+            msg.setErrorDetails(resp.getStatusLine().getReasonPhrase());
         }
         else {
             String body = ImporterRequest.getBody(resp);
             logger.info(body);
+            msg.setStatus(MessageResult.Status.PENDING);
+            msg.setBody(body);
 
             // FIXME: Do we really want to spin here?  We can be notified when the response message comes in another
             // way.  Make the message listener a service that runs, and it will do something (eg send email, update

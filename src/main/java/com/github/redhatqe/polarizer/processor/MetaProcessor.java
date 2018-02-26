@@ -896,7 +896,7 @@ public class MetaProcessor {
             if (root.has("status")) {
                 if (root.get("status").textValue().equals("failed")) {
                     result.setStatus(MessageResult.Status.FAILED);
-                    result.errorDetails = "status was failed";
+                    result.setErrorDetails("status was failed");
                     return result;
                 }
             }

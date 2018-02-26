@@ -158,24 +158,24 @@ public class XUnitService {
                             }
                         });
                         result.setStatus(MessageResult.Status.FAILED);
-                        result.errorDetails = "TestSuites failed to be updated: " + String.join(",", suites);
+                        result.setErrorDetails("TestSuites failed to be updated: " + String.join(",", suites));
                     }
                     else {
                         logger.error(root.get("message").asText());
                         result.setStatus(MessageResult.Status.EMPTY_MESSAGE);
-                        result.errorDetails = root.get("message").toString();
+                        result.setErrorDetails(root.get("message").toString());
                     }
                 }
             } catch (NullPointerException npe) {
                 String err = "Unknown format of message from bus";
                 logger.error(err);
                 result.setStatus(MessageResult.Status.NP_EXCEPTION);
-                result.errorDetails = err;
+                result.setErrorDetails(err);
             } catch (JsonProcessingException e) {
                 String err = "Unable to deserialize JsonNode";
                 logger.error(err);
                 result.setStatus(MessageResult.Status.WRONG_MESSAGE_FORMAT);
-                result.errorDetails = err;
+                result.setErrorDetails(err);
                 e.printStackTrace();
             }
             return result;
@@ -268,14 +268,14 @@ public class XUnitService {
             String msg = "Error POST'ing to /xunit/import";
             res.setText(msg);
             MessageResult<DefaultResult> err = new MessageResult<>(res, null, MessageResult.Status.SEND_FAIL);
-            err.errorDetails = msg;
+            err.setErrorDetails(msg);
             return err;
         });
 
         JsonObject jo = new JsonObject();
         jo.put("status", n.getStatus().toString());
         jo.put("result", n.info.getText());
-        jo.put("errors", n.errorDetails);
+        jo.put("errors", n.getErrorDetails());
         if (n.getStatus() == MessageResult.Status.SUCCESS)
             jo.put("new-xunit-path", xml.toString());
         else
