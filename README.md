@@ -43,15 +43,25 @@ While polarize got the job done, it had a lot of disadvantages:
 - The new Unified Message Bus added some difficulties due to it requiring TLS certificates 
   - There was not a plugin like redhat-ci-plugin to send/listen for the TestCase imports 
   
-So, now polarizer runs as a web service, meaning that it's functionality is done at runtime now.  This will allow non
-Java teams to be able to user polarizer, once a few other things are in place (such as python decorators which are the
+## Relationship to polarizer-vertx
+
+polarizer is the library that polarizer-vertx sits on top of.  So polarizer does a lot of the heavy lifting, and polarizer-vertx
+is the actual Vertx services that clients make use of.  Due to a historical artifact, the services provided as a whole are 
+called 'polarizer', even though polarizer-the-project is really the base libraries, and polarizer-vertx is the actual microservice
+component.
+
+## Benifits to the new architecture
+
+By splitting off polarizer as a base library that polarizer-vertx makes use of, it allows for non java clients.  Now that 
+polarizer-vertx runs as a web service, meaning that it's functionality is done at runtime now.  This will allow non
+Java teams to be able to use polarizer, once a few other things are in place (such as python decorators which are the
 functional equivalent of the Java annotations, and an import load hook to find the decorations).  Also, as long as a 
 team has a similar mapping file, they can now generate a Polarion-compliant Xunit xml file.  The advantages are many:
 
-- polarizer will run as a web service
-  - Clients just need to make REST calls (but also looking at websockets and GraphQL)
+- polarizer runs as a web service
+  - Clients just need to make REST calls but also supports websockets for some endpoints (and looking into GraphQL)
   - Allows non-Java teams to be able to use it
-  - The bash scripts in the Build Steps of the jobs have been drastically simplified
+  - The bash scripts in the Build Steps of rhsm-qe Jenkins jobs have been drastically simplified
 - Simple API
   - Create Mapping: given a jar file and a mapping file, return a new mapping file
   - TestCase Import: given a TestCase XML file and map file, make request to Polarion returning a new mapping file
@@ -83,19 +93,7 @@ A brief primer on libraries other java teams can make use of
 
 ### Unified Message Bus library for Java
 
-While the redhat-ci-jenkins plugin is definitely useful, it's also not flexible.  Ideally, a higher level library
-should have been created and the jenkins plugin would have been written to use this.  In other words, the plugin would
-have just been another client making use of the library.  Had this strategy been followed, other teams with other 
-requirements (for example, not testing on jenkins or with other workflows) could have made use of it too. 
-
-So onn top of the above API, polarizer also comes with a Unified Message Bus client.  Currently, if another application
-wants to make use of this library, they would need to follow the directions for setting up their own TLS cert and 
-getting the appropriate permissions.  This is not needed if they only wish to make use of listening for messages on the
-UMB that are published from the following queue Destination:
-
-```
-VirtualTopic.qe.ci.>
-```
+This has been replaced by [polarizer-umb][-umb]
 
 ### TestNG xunit generator 
 
@@ -171,7 +169,7 @@ One answer is through decorators.  Every python function or method which runs a 
 decorator such that another program could find and analyze all of these.  While javascript does not (yet until es2018)
 decorators, decorators are really just syntactic sugar for functional closures.
 
-I already have some ideas on how to implement this as shown in the README for polarize
+I have already started the [polarizer-py][-pol-py] project to implement this
 
 ### Real time results
 
@@ -218,8 +216,9 @@ this a Java 9 modular system soon).  The package structure is as follows:
     - config: data classes that can be (de)serialized to/from yaml and json
   - processor: classes that manipulate and process the metadata and help updating the mapping file
   - reflector: classes that use reflection on the jar to get the metadata from annotations and handle testcase imports
-  - 
 
 [-reporter]: https://github.com/rarebreed/reporter
 [-metadata]: https://github.com/RedHatQE/metadata
 [-pvertx]: https://github.com/Polarizer-Projects/polarizer-vertx
+[-pol-py]: https://github.com/rarebreed/polarizer-py
+[-umb]: https://github.com/rarebreed/polarizer-umb
