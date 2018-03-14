@@ -15,6 +15,7 @@ import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.reporter.configuration.data.XUnitConfig;
 import com.github.redhatqe.polarizer.reporter.importer.xunit.*;
 import com.github.redhatqe.polarizer.reporter.importer.xunit.Properties;
+import com.github.redhatqe.polarizer.reporter.utils.Tuple;
 import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.JsonHelper;
 import io.vertx.core.json.JsonObject;
@@ -235,7 +236,7 @@ public class XUnitService {
     }
 
     /**
-     * Makes a POST to the polarion /xunit/import
+     * Makes a POST to the polarion /import/xunit
      *
      * @param args XUnitConfig object containing all the necessary information
      * @throws IOException
@@ -247,12 +248,17 @@ public class XUnitService {
                 args.getXunit().getSelector().getValue());
         String user = args.getServers().get("polarion").getUser();
         String pw = args.getServers().get("polarion").getPassword();
+        String domain = args.getServers().get("polarion").getDomain();
         String xunitPath = args.getCurrentXUnit();
 
         selector = checkSelector(selector);
 
         // If the xunitPath starts with http, then download it
         File xml = getXunitFile(new File(xunitPath), xunitPath, user, pw);
+        /*
+        List<Tuple<String, File>> files = new ArrayList<>();
+        files.add(new Tuple<>("file", xml));
+        */
 
         // TODO: Have a way to pass the broker data in if needed
         String defaultBrokerPath = ICIBus.getDefaultConfigPath();
@@ -262,7 +268,8 @@ public class XUnitService {
         String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
         Optional<MessageResult<DefaultResult>> maybeResult;
 
-        maybeResult = ImporterRequest.sendImportByTap( cbl, url, user, pw, xml, selector, address);
+        maybeResult = ImporterRequest.sendImportByTap( cbl, url, domain, user, pw, xml, selector, address);
+        // maybeResult = ImporterRequest.sendImport(cbl, url, domain, user, pw, files, selector, address);
         MessageResult<DefaultResult> n = maybeResult.orElseGet(() -> {
             DefaultResult res = new DefaultResult();
             String msg = "Error POST'ing to /xunit/import";

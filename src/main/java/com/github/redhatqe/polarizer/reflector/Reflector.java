@@ -5,6 +5,7 @@ import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestDefinitions;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
+import com.github.redhatqe.polarizer.messagebus.DefaultResult;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.processor.MetaData;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
@@ -329,7 +330,7 @@ public class Reflector {
         }).collect(Collectors.toList());
     }
 
-    List<Optional<MessageResult<ProcessingInfo>>> testcasesImporterRequest(File mapPath) {
+    List<Optional<MessageResult<DefaultResult>>> testcasesImporterRequest(File mapPath) {
         return MetaProcessor.tcImportRequest(this.tcMap
                 , methToProjectDef
                 , this.mappingFile

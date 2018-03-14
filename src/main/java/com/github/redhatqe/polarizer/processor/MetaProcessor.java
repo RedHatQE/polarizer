@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarizer.messagebus.DefaultResult;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.exceptions.*;
@@ -878,14 +879,14 @@ public class MetaProcessor {
      * @param tt
      * @return
      */
-    public static MessageHandler
+    public static MessageHandler<DefaultResult>
     testcaseImportHandler( Map<String, Map<String, Meta<TestDefinition>>> methToProjectDef
                          , String projID
                          , Map<String, Map<String, IdParams>> mapFile
                          , File mapPath
                          , TestCaseInfo tt) {
         return (ObjectNode node) -> {
-            MessageResult result = new MessageResult();
+            MessageResult<DefaultResult> result = new MessageResult<>();
             if (node == null) {
                 logger.warn("No message was received");
                 result.setStatus(MessageResult.Status.NO_MESSAGE);
@@ -1015,14 +1016,14 @@ public class MetaProcessor {
      * @param brokerCfg
      * @return
      */
-    public static List<Optional<MessageResult<ProcessingInfo>>>
+    public static List<Optional<MessageResult<DefaultResult>>>
     tcImportRequest(Map<String, List<Testcase>> testcaseMap,
                     Map<String, Map<String, Meta<TestDefinition>>> methToProjectDef,
                     Map<String, Map<String, IdParams>> mapFile,
                     File mappingPath,
                     TestCaseConfig config,
                     BrokerConfig brokerCfg) {
-        List<Optional<MessageResult<ProcessingInfo>>> maybeNodes = new ArrayList<>();
+        List<Optional<MessageResult<DefaultResult>>> maybeNodes = new ArrayList<>();
         if (testcaseMap.isEmpty() || !config.getTestcase().getEnabled()) {
             // TODO:  Need to be able to return the JsonObject
             if (!testcaseMap.isEmpty()) {
@@ -1045,12 +1046,12 @@ public class MetaProcessor {
         for(String project: testcaseMap.keySet()) {
             File testXml = FileHelper.makeTempFile("/tmp", "testcase-import", ".xml", null);
             Testcases tests = new Testcases();
-            Optional<MessageResult<ProcessingInfo>> on;
+            Optional<MessageResult<DefaultResult>> on;
             if (!MetaProcessor.initTestcases(selName, selVal, project, testXml, testcaseMap, tests)
                     .isPresent())
                 maybeNodes.add(Optional.empty());
             else {
-                MessageHandler hdlr;
+                MessageHandler<DefaultResult> hdlr;
                 String projID = config.getProject();
                 hdlr = MetaProcessor
                         .testcaseImportHandler( methToProjectDef
@@ -1059,10 +1060,11 @@ public class MetaProcessor {
                                               , mappingPath
                                               , config.getTestcase());
                 String url = config.getServers().get("polarion").getUrl() + config.getTestcase().getEndpoint();
-                CIBusListener<ProcessingInfo> cbl = new CIBusListener<>(hdlr, brokerCfg);
+                CIBusListener<DefaultResult> cbl = new CIBusListener<>(hdlr, brokerCfg);
                 String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
                 on = ImporterRequest.sendImportByTap( cbl
                                                     , url
+                                                    , config.getServers().get("polarion").getDomain()
                                                     , config.getServers().get("polarion").getUser()
                                                     , config.getServers().get("polarion").getPassword()
                                                     , testXml

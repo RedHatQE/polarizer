@@ -2,6 +2,7 @@ package com.github.redhatqe.polarizer.reflector;
 
 import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarizer.messagebus.DefaultResult;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
 import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
@@ -207,7 +208,7 @@ public class MainReflector implements IJarHelper {
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
                     refl.methToProjectDef, refl.mappingFile);
         // TODO:  Need to do something with the importResults
-        List<Optional<MessageResult<ProcessingInfo>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
+        List<Optional<MessageResult<DefaultResult>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
         JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
         MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);
 

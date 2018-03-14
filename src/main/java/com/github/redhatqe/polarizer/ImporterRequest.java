@@ -44,6 +44,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -67,6 +68,7 @@ public class ImporterRequest {
         , Class<T> tclass
         , String url
         , String xml
+        , String domain
         , String user
         , String pw) {
         JAXBHelper jaxb = new JAXBHelper();
@@ -76,7 +78,7 @@ public class ImporterRequest {
         IFileHelper.makeDirs(importerFile.toPath());
         IJAXBHelper.marshaller(t, importerFile, jaxb.getXSDFromResource(tclass));
 
-        return ImporterRequest.postMultiPart(url, files, user, pw);
+        return ImporterRequest.postMultiPart(url, files, domain, user, pw);
     }
 
 
@@ -118,11 +120,12 @@ public class ImporterRequest {
 
     public static CloseableHttpClient
     login( String url
+         , String domain
          , String user
          , String pw) throws IOException {
         BasicCookieStore cookieStore = new BasicCookieStore();
         BasicClientCookie cookie = new BasicClientCookie("JSESSIONID", null);
-        cookie.setDomain(".engineering.redhat.com");
+        cookie.setDomain(domain);
         cookie.setPath("/");
         cookieStore.addCookie(cookie);
 
@@ -132,13 +135,13 @@ public class ImporterRequest {
         HttpPost postMethod = new HttpPost(url);
 
         List<NameValuePair> params = new ArrayList<>();
-        params.add(new BasicNameValuePair("j_username", user));
-        params.add(new BasicNameValuePair("j_password", pw));
-        params.add(new BasicNameValuePair("submit", "Log In"));
-        params.add(new BasicNameValuePair("rememberme", "true"));
+        String[][] args = {{"j_username", user}, {"j_password", pw}, {"submit", "Log In"}, {"rememberme", "true"}};
+        Arrays.asList(args).forEach(pair -> {
+            params.add(new BasicNameValuePair(pair[0], pair[1]));
+        });
+
         postMethod.setEntity(new UrlEncodedFormEntity(params));
         postMethod.setHeader("Content-type", "application/x-www-form-urlencoded");
-        postMethod.setEntity(new UrlEncodedFormEntity(params));
 
         CloseableHttpResponse response = httpClient.execute(postMethod);
         if (response.getStatusLine().getStatusCode() != 200)
@@ -163,6 +166,7 @@ public class ImporterRequest {
     public static CloseableHttpResponse
     postMultiPart( String url
                  , List<Tuple<String, File>> importerFiles
+                 , String domain
                  , String user
                  , String pw) {
         CloseableHttpResponse response = null;
@@ -171,7 +175,7 @@ public class ImporterRequest {
 
         // FIXME: This should probably go into a helper class since the XUnitService is going to need this too
         try {
-            CloseableHttpClient httpClient = login(url, user, pw);
+            CloseableHttpClient httpClient = login(url, domain, user, pw);
             HttpPost postMethod = new HttpPost(url);
 
             MultipartEntityBuilder body = MultipartEntityBuilder.create();
@@ -242,6 +246,7 @@ public class ImporterRequest {
     public static <T> Optional<MessageResult<T>>
     sendImport( CIBusListener<T> cbl
               , String url
+              , String domain
               , String user
               , String pw
               , List<Tuple<String, File>> files
@@ -254,7 +259,7 @@ public class ImporterRequest {
         Optional<MessageResult<T>> result;
 
         logger.info("Making import request as user: " + user);
-        CloseableHttpResponse resp = ImporterRequest.postMultiPart(url, files, user, pw);
+        CloseableHttpResponse resp = ImporterRequest.postMultiPart(url, files, domain, user, pw);
         if (resp != null)
             logger.info(resp.toString());
         else {
@@ -282,6 +287,7 @@ public class ImporterRequest {
     public static <T> Optional<MessageResult<T>>
     sendImportByTap( CIBusListener<T> cbl
                    , String url
+                   , String domain
                    , String user
                    , String pw
                    , File reportPath
@@ -293,7 +299,7 @@ public class ImporterRequest {
         logger.info("Making import request as user: " + user);
         List<Tuple<String, File>> files = new ArrayList<>();
         files.add(new Tuple<>("file", reportPath));
-        CloseableHttpResponse resp = ImporterRequest.postMultiPart(url, files, user, pw);
+        CloseableHttpResponse resp = ImporterRequest.postMultiPart(url, files, domain, user, pw);
         // TODO: Get the body of the message which should contain a job ID.  We can use the Job ID to track it in the
         // new Polarion Queue browser
         if (resp != null)
@@ -450,6 +456,7 @@ public class ImporterRequest {
     public static void main(String[] args) throws IOException {
         CloseableHttpClient client =
                 login("https://polarion-devel.engineering.redhat.com/polarion/j_security_check"
+                     , ".engineering.redhat.com"
                      , "stoner"
                      , "!ronM@N1968");
         String xmlPath = args[0];
