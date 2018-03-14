@@ -196,13 +196,12 @@ public class ImporterRequest {
 
             logger.info("Executing POST command");
             response = httpClient.execute(postMethod);
-            ImporterRequest.logger.info(response.toString());
+            String respBody = response.toString();
+            ImporterRequest.logger.info(String.format("After httpClient.execute response is:\n%s", respBody));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        if (response != null)
-            System.out.println(ImporterRequest.getBody(response));
         return response;
     }
 
@@ -260,8 +259,10 @@ public class ImporterRequest {
 
         logger.info("Making import request as user: " + user);
         CloseableHttpResponse resp = ImporterRequest.postMultiPart(url, files, domain, user, pw);
-        if (resp != null)
-            logger.info(resp.toString());
+        if (resp != null) {
+            String respToString = resp.toString();
+            logger.info(String.format("In sendImport:\n%s", respToString));
+        }
         else {
             result = Optional.empty();
             return result;
@@ -277,7 +278,7 @@ public class ImporterRequest {
         }
         else {
             String body = ImporterRequest.getBody(resp);
-            logger.info(body);
+            logger.info(String.format("Body of response is:\n%s",body));
             msg.setStatus(MessageResult.Status.PENDING);
             msg.setBody(body);
         }

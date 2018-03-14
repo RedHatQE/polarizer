@@ -138,8 +138,9 @@ public class XUnitService {
             try {
                 Boolean passed = root.get("status").textValue().equals("passed");
                 if (passed) {
-                    logger.info("XUnit importer was successful");
-                    logger.info(root.get("testrun-url").textValue());
+                    logger.info("In xunitMsgHandler: XUnit importer was successful");
+                    String testrunUrl = root.get("testrun-url").textValue();
+                    logger.info(String.format("Polarion TestRun = %s", testrunUrl));
                     result.info.setText(JsonHelper.nodeToString(root));
                     result.setStatus(MessageResult.Status.SUCCESS);
                 }
