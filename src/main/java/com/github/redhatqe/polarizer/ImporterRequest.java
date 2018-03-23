@@ -197,7 +197,7 @@ public class ImporterRequest {
             logger.info("Executing POST command");
             response = httpClient.execute(postMethod);
             String respBody = response.toString();
-            ImporterRequest.logger.info(String.format("After httpClient.execute response is:\n%s", respBody));
+            //ImporterRequest.logger.info(String.format("After httpClient.execute response is:\n%s", respBody));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -257,11 +257,10 @@ public class ImporterRequest {
         MessageResult<T> msg;
         Optional<MessageResult<T>> result;
 
-        logger.info("Making import request as user: " + user);
+        logger.info(String.format("Making import request to %s on domain %s as user %s: ", url, domain, user));
         CloseableHttpResponse resp = ImporterRequest.postMultiPart(url, files, domain, user, pw);
         if (resp != null) {
-            String respToString = resp.toString();
-            logger.info(String.format("In sendImport:\n%s", respToString));
+            logger.info(String.format("In sendImport.  Status is %d", resp.getStatusLine().getStatusCode()));
         }
         else {
             result = Optional.empty();
@@ -278,7 +277,7 @@ public class ImporterRequest {
         }
         else {
             String body = ImporterRequest.getBody(resp);
-            logger.info(String.format("Body of response is:\n%s",body));
+            logger.info(String.format("In sendImport, Body of response is:\n%s",body));
             msg.setStatus(MessageResult.Status.PENDING);
             msg.setBody(body);
         }
@@ -456,7 +455,7 @@ public class ImporterRequest {
 
     public static void main(String[] args) throws IOException {
         CloseableHttpClient client =
-                login("https://polarion-devel.engineering.redhat.com/polarion/j_security_check"
+                login("https://polarion.stage.engineering.redhat.com/polarion/j_security_check"
                      , ".engineering.redhat.com"
                      , "stoner"
                      , "!ronM@N1968");
