@@ -210,6 +210,7 @@ public class MainReflector implements IJarHelper {
         // TODO:  Need to do something with the importResults
         List<Optional<MessageResult<DefaultResult>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
         JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
+        // FIXME:  This is editing the existing mapping.json file.  I think we should return a _new_ mapping.json
         MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);
 
         refl.testDefAdapters = refl.testDefs.stream()
@@ -227,6 +228,7 @@ public class MainReflector implements IJarHelper {
 
         JsonObject jo = MetaProcessor.writeAuditJson(null, audit);
         // TODO: Add the mapping file we will return
+        jo.put("map-file", refl.mappingFile);
         return jo;
     }
 

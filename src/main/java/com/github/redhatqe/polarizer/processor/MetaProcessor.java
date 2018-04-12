@@ -812,53 +812,53 @@ public class MetaProcessor {
         HashMap<String, Map<String, IdParams>> collected = new HashMap<>();
         // Iterate through the map of qualifiedMethod -> ProjectID -> Meta<TestDefinition>
         Map<String, Map<String, IdParams>> mpid = methToProjMeta.entrySet().stream()
-                .reduce(collected,
-                        // Function that gets the inner map in methToProjMeta
-                        (accum, entry) -> {
-                            String methName = entry.getKey();
-                            Map<String, Meta<TestDefinition>> methToDef = entry.getValue();
-                            HashMap<String, IdParams> accumulator = new HashMap<>();
-                            Map<String, IdParams> methToProject = methToDef.entrySet().stream()
-                                    .reduce(accumulator,  // our "identity" value is the accumulator
-                                            // Gets the map of String -> Meta<TestDefinition> inside methToProjMeta
-                                            (acc, n) -> {
-                                                String project = n.getKey();
-                                                Meta<TestDefinition> m = n.getValue();
-                                                if (mapFile.containsKey(methName)) {
-                                                    Map<String, IdParams> pToI = mapFile.get(methName);
-                                                    Boolean projectInMapping = pToI.containsKey(project);
-                                                    if (projectInMapping) {
-                                                        String idForProject = pToI.get(project).id;
-                                                        Boolean idIsEmpty = idForProject.equals("");
-                                                        if (!idIsEmpty) {
-                                                            String msg = "Id for %s is in mapping file";
-                                                            logger.debug(String.format(msg, idForProject));
-                                                            m.polarionID = idForProject;
-                                                        }
-                                                        else
-                                                            throw new MappingError("No ID for " + methName);
-                                                    }
-                                                }
-                                                String id = m.polarionID;
-                                                List<String> params = m.params.stream()
-                                                        .map(Parameter::getName)
-                                                        .collect(Collectors.toList());
-                                                IdParams ip = new IdParams(id, params);
+            .reduce(collected,
+                // Function that gets the inner map in methToProjMeta
+                (accum, entry) -> {
+                    String methName = entry.getKey();
+                    Map<String, Meta<TestDefinition>> methToDef = entry.getValue();
+                    HashMap<String, IdParams> accumulator = new HashMap<>();
+                    Map<String, IdParams> methToProject = methToDef.entrySet().stream()
+                        .reduce(accumulator,  // our "identity" value is the accumulator
+                            // Gets the map of String -> Meta<TestDefinition> inside methToProjMeta
+                            (acc, n) -> {
+                                String project = n.getKey();
+                                Meta<TestDefinition> m = n.getValue();
+                                if (mapFile.containsKey(methName)) {
+                                    Map<String, IdParams> pToI = mapFile.get(methName);
+                                    Boolean projectInMapping = pToI.containsKey(project);
+                                    if (projectInMapping) {
+                                        String idForProject = pToI.get(project).id;
+                                        Boolean idIsEmpty = idForProject.equals("");
+                                        if (!idIsEmpty) {
+                                            String msg = "Id for %s is in mapping file";
+                                            logger.debug(String.format(msg, idForProject));
+                                            m.polarionID = idForProject;
+                                        }
+                                        else
+                                            throw new MappingError("No ID for " + methName);
+                                    }
+                                }
+                                String id = m.polarionID;
+                                List<String> params = m.params.stream()
+                                        .map(Parameter::getName)
+                                        .collect(Collectors.toList());
+                                IdParams ip = new IdParams(id, params);
 
-                                                acc.put(project, ip);
-                                                return acc;
-                                            },
-                                            (a, next) -> {
-                                                a.putAll(next);
-                                                return a;
-                                            });
-                            accum.put(methName, methToProject);
-                            return accum;
-                        },
-                        (partial, next) -> {
-                            partial.putAll(next);
-                            return partial;
-                        });
+                                acc.put(project, ip);
+                                return acc;
+                            },
+                            (a, next) -> {
+                                a.putAll(next);
+                                return a;
+                            });
+                    accum.put(methName, methToProject);
+                    return accum;
+                },
+                (partial, next) -> {
+                    partial.putAll(next);
+                    return partial;
+                });
         writeMapFile(mapPath, mpid);
         return mpid;
     }
@@ -1031,11 +1031,16 @@ public class MetaProcessor {
                 String msg = "The TestCase Importer is disabled, but polarize detected that TestCase imports are " +
                         "required";
                 jo.put("message", msg);
+                MessageResult<DefaultResult> res = new MessageResult<>();
                 testcaseMap.forEach((String project, List<Testcase> tcs) -> {
                     List<String> titles = tcs.stream().map(Testcase::getTitle).collect(Collectors.toList());
                     JsonArray jt = new JsonArray(titles);
                     jo.put("titles", jt);
                 });
+                String err = jo.encode();
+                logger.error(err);
+                res.setErrorDetails(err);
+                maybeNodes.add(Optional.of(res));
             }
             return maybeNodes;
         }
