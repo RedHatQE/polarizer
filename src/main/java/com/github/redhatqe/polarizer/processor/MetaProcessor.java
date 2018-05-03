@@ -265,10 +265,13 @@ public class MetaProcessor {
     /**
      * Generates the data in the mapping file as needed and determines if a testcase import request is needed
      *
-     * @param meta
-     * @param mapFile
-     * @param tcToMeta
-     * @param testCaseMap
+     * If this function determines that a testcase import is needed, it will add the TestCase to the testCaseMap
+     * argument that was passed in
+     *
+     * @param meta the annotation to process
+     * @param mapFile the mapping.json in Map form
+     * @param tcToMeta a lookup map from a TestCase object to the Meta
+     * @param testCaseMap a map of project ID to TestCase that need testcase import
      * @return
      */
     public static Tuple3<Testcase, Boolean, ProcessingInfo>
@@ -535,8 +538,6 @@ public class MetaProcessor {
     }
 
     /**
-     * TODO: This function should return some kind of JsonObject
-     *
      * This is the new version of processIdEntities.  In this new style, the testing is much simpler because there are
      * only two places to check now:
      *
@@ -571,7 +572,6 @@ public class MetaProcessor {
     processIdEntities(Meta<TestDefinition> meta,
                       Map<String, Map<String, IdParams>> mapFile,
                       File mapPath) {
-        // TODO: Replace this by passing in a Subject
         List<String> badFuncs = new ArrayList<>();
         ProcessingInfo pi = pi = new ProcessingInfo("Unprocessed", meta);
 
@@ -583,7 +583,7 @@ public class MetaProcessor {
         int importType = meta.annotation.update() ? 1 << 1 : 0;
 
         // w00t, bit tricks.  Thought I wouldn't need these again after my embedded days :)
-        int idval = (annId.equals("") ? 0 : 1 << 1)  | (mapId.equals("") ? 0 : 1);
+        int idval = (annId.equals("") ? 0 : 1 << 1) | (mapId.equals("") ? 0 : 1);
         IDType idtype = IDType.fromNumber(idval);
         if (idtype == null)
             throw new MappingError("Error in IDType.fromNumber()");
@@ -740,7 +740,7 @@ public class MetaProcessor {
         JsonArray noIdsForProject = new JsonArray();
         JsonArray noIdsAnywhere = new JsonArray();
         JsonArray idInMNapButNotAnnotation = new JsonArray();
-        JsonArray mismatchIds = new JsonArray();
+
         List<String> badFunctions = new ArrayList<>();
         methMap.forEach((fnName, projectToMeta) -> {
             projectToMeta.forEach((project, meta) -> {
@@ -811,7 +811,9 @@ public class MetaProcessor {
         logger.info("Generating mapping file based on all methods");
         HashMap<String, Map<String, IdParams>> collected = new HashMap<>();
         // Iterate through the map of qualifiedMethod -> ProjectID -> Meta<TestDefinition>
-        Map<String, Map<String, IdParams>> mpid = methToProjMeta.entrySet().stream()
+        Map<String, Map<String, IdParams>> mpid = methToProjMeta
+            .entrySet()
+            .stream()
             .reduce(collected,
                 // Function that gets the inner map in methToProjMeta
                 (accum, entry) -> {
@@ -871,13 +873,12 @@ public class MetaProcessor {
      * This handler will take the ObjectNode (for example, decoded from a message on the message bus) gets the Polarion
      * ID from the ObjectNode, and edits the XML file with the Id.  It will also store
      *
+     * @param methToProjectDef map of Project -> Qualified methodname -> Metadata
+     * @param projID string of ProjectID (eg RHEL6)
+     * @param mapFile Map form of the mapping.json file
+     * @param mapPath path to the mapping.json
+     * @param tt TestCaseInfo
      * @return lambda of a Consumer
-     * @param methToProjectDef
-     * @param projID
-     * @param mapFile
-     * @param mapPath
-     * @param tt
-     * @return
      */
     public static MessageHandler<DefaultResult>
     testcaseImportHandler( Map<String, Map<String, Meta<TestDefinition>>> methToProjectDef
@@ -950,9 +951,12 @@ public class MetaProcessor {
     }
 
     /**
-     * This method does several things.
+     * This method does two things.
      * - Check if there is a method annotated with @Test, but not @TestDefinition
      * - Checks if a method's TestDefinition.update = true
+     *
+     * @param atTestMethods methods annotated with @Test
+     * @param atTD map of Project -> Qualified methodname -> Metadata
      * @return
      */
     public static Tuple<SortedSet<String>, List<UpdateAnnotation>>
@@ -1008,12 +1012,12 @@ public class MetaProcessor {
     /**
      * Sends a TestCase import request for each project
      *
-     * @param testcaseMap
-     * @param methToProjectDef
-     * @param mapFile
-     * @param mappingPath
-     * @param config
-     * @param brokerCfg
+     * @param testcaseMap a map of Project ID to list of TestCases that need testcase Import
+     * @param methToProjectDef map of Project -> Qualified methodname -> Metadata
+     * @param mapFile the mapping.json in Map form
+     * @param mappingPath path to the mapping.json
+     * @param config the TestCaseConfig arguments used (eg polarizer-testcase.json)
+     * @param brokerCfg the BrokerConfig being used
      * @return
      */
     public static List<Optional<MessageResult<DefaultResult>>>
@@ -1040,6 +1044,7 @@ public class MetaProcessor {
                 String err = jo.encode();
                 logger.error(err);
                 res.setErrorDetails(err);
+                res.setStatus(MessageResult.Status.SEND_FAIL);
                 maybeNodes.add(Optional.of(res));
             }
             return maybeNodes;

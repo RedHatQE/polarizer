@@ -2,9 +2,9 @@ package com.github.redhatqe.polarizer.reflector;
 
 import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarizer.data.TestCaseNeedingImport;
 import com.github.redhatqe.polarizer.messagebus.DefaultResult;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
-import com.github.redhatqe.polarizer.data.ProcessingInfo;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.reporter.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
@@ -207,10 +207,9 @@ public class MainReflector implements IJarHelper {
         if (!refl.mapPath.exists())
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
                     refl.methToProjectDef, refl.mappingFile);
-        // TODO:  Need to do something with the importResults
+
         List<Optional<MessageResult<DefaultResult>>> importResults = refl.testcasesImporterRequest(refl.mapPath);
         JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
-        // FIXME:  This is editing the existing mapping.json file.  I think we should return a _new_ mapping.json
         MetaProcessor.writeMapFile(refl.mapPath, refl.mappingFile);
 
         refl.testDefAdapters = refl.testDefs.stream()
@@ -222,13 +221,24 @@ public class MainReflector implements IJarHelper {
                 })
                 .collect(Collectors.toList());
 
+        // Determine which methods still need to be imported to polarion, which test methods are being used by TestNG
+        // but don't have an @TestDefinition, and which methods have update=true in the annotation
         Set<String> enabledTests = MainReflector.getEnabledTests(refl.methods);
         Tuple<SortedSet<String>, List<MetaProcessor.UpdateAnnotation>> audit =
                 MetaProcessor.auditMethods(enabledTests, refl.methToProjectDef);
 
         JsonObject jo = MetaProcessor.writeAuditJson(null, audit);
-        // TODO: Add the mapping file we will return
-        jo.put("map-file", refl.mappingFile);
+        importResults.forEach(o -> o.ifPresent(mr -> {
+            jo.put("import-status", mr.getStatus().toString());
+            String err = mr.getErrorDetails();
+            try {
+                TestCaseNeedingImport needs = Serializer.fromJson(TestCaseNeedingImport.class, err);
+                jo.put("methods-needing-import", needs != null ? needs.getTitles() : "");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+        jo.put("mapping", refl.mappingFile);
         return jo;
     }
 
@@ -248,6 +258,6 @@ public class MainReflector implements IJarHelper {
     // arg[2] mappath
     public static void main(String[] args) throws IOException {
         JsonObject jo = MainReflector.process(args[0], args[1], args[2]);
-        jo.getString("needs-testdefinition");
+        System.out.println(jo.encode());
     }
 }
