@@ -175,7 +175,12 @@ public class ImporterRequest {
 
         // FIXME: This should probably go into a helper class since the XUnitService is going to need this too
         try {
-            CloseableHttpClient httpClient = login(url, domain, user, pw);
+            CloseableHttpClient httpClient;
+            // FIXME: Hacky workaround because the ci-ops team hasn't enabled the new form auth for polation.stage
+            if (url.startsWith("polarion.stage"))
+                httpClient = makeBuilder(url, user, pw).build();
+            else
+                httpClient = login(url, domain, user, pw);
             HttpPost postMethod = new HttpPost(url);
 
             MultipartEntityBuilder body = MultipartEntityBuilder.create();
