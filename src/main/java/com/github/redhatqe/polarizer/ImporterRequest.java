@@ -24,8 +24,8 @@ import org.apache.http.impl.client.*;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 
 
 public class ImporterRequest {
-    private static Logger logger = LoggerFactory.getLogger(ImporterRequest.class);
+    private static Logger logger = LogManager.getLogger(ImporterRequest.class.getName());
 
     /**
      * Marshalls t of Type T into xml file and uses this generated xml for an importer request
@@ -177,7 +177,7 @@ public class ImporterRequest {
         try {
             CloseableHttpClient httpClient;
             // FIXME: Hacky workaround because the ci-ops team hasn't enabled the new form auth for polation.stage
-            if (url.startsWith("polarion.stage"))
+            if (url.contains("polarion.stage"))
                 httpClient = makeBuilder(url, user, pw).build();
             else
                 httpClient = login(url, domain, user, pw);
@@ -456,14 +456,5 @@ public class ImporterRequest {
                 e.printStackTrace();
             }
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        CloseableHttpClient client =
-                login("https://polarion.stage.engineering.redhat.com/polarion/j_security_check"
-                     , ".engineering.redhat.com"
-                     , "stoner"
-                     , "!ronM@N1968");
-        String xmlPath = args[0];
     }
 }

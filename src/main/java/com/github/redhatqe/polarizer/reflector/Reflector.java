@@ -50,6 +50,13 @@ public class Reflector {
     File mapPath;
     private List<ProcessingInfo> results;
 
+    public Map<String, List<Testcase>> getTcMap() {
+        return tcMap;
+    }
+
+    public TestCaseConfig getTcConfig() {
+        return tcConfig;
+    }
 
     /**
      * Uses default broker config

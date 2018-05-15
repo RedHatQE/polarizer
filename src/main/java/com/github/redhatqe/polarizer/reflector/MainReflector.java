@@ -11,8 +11,10 @@ import com.github.redhatqe.polarizer.messagebus.MessageResult;
 import com.github.redhatqe.polarizer.processor.Meta;
 import com.github.redhatqe.polarizer.processor.MetaData;
 import com.github.redhatqe.polarizer.processor.MetaProcessor;
+import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.IJarHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 
@@ -203,6 +205,29 @@ public class MainReflector implements IJarHelper {
         return refl;
     }
 
+    private static JsonObject _generate(Reflector refl) {
+        if (!refl.mapPath.exists())
+            refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
+                    refl.methToProjectDef, refl.mappingFile);
+
+        List<File> xmlimport = MetaProcessor.generateXML(refl.getTcMap(), refl.getTcConfig());
+        List<String> imports = new ArrayList<>();
+
+        JsonObject um = MetaProcessor.updateMappingFile(refl.mappingFile, refl.methToProjectDef, refl.mapPath, null);
+        // Open the files, and dump them back
+        xmlimport.forEach(xml -> {
+            try {
+                String content = FileHelper.readFile(xml.toString());
+                imports.add(content);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        JsonArray xml = new JsonArray(imports);
+        um.put("testcase-xml", xml);
+        return um;
+    }
+
     private static JsonObject _process(Reflector refl) throws IOException {
         if (!refl.mapPath.exists())
             refl.mappingFile = MetaProcessor.createMappingFile( refl.mapPath,
@@ -238,7 +263,13 @@ public class MainReflector implements IJarHelper {
                 e.printStackTrace();
             }
         }));
+        // Add any of the no-ids-funcs
+        Map<String, List<String>> noIds = new HashMap<>();
+        refl.getResults().forEach(pi -> {
+            noIds.put(pi.getMeta().project, pi.getNoIdFuncs());
+        });
         jo.put("mapping", refl.mappingFile);
+        jo.put("no-id-funcs", noIds);
         return jo;
     }
 
@@ -252,12 +283,23 @@ public class MainReflector implements IJarHelper {
         return MainReflector._process(refl);
     }
 
+    public static JsonObject generate(String jarPath, String tcCfgPath, String mappingPath) throws IOException {
+        Reflector refl = reflect(jarPath, tcCfgPath, mappingPath);
+        return MainReflector._generate(refl);
+    }
+
+    public static JsonObject generate(TestCaseConfig cfg) throws IOException {
+        Reflector refl = reflect(cfg);
+        return MainReflector._generate(refl);
+    }
+
     // FIXME: Replace this with a test
     // arg[0] jarpath
     // arg[1] configpath
     // arg[2] mappath
     public static void main(String[] args) throws IOException {
-        JsonObject jo = MainReflector.process(args[0], args[1], args[2]);
+        //JsonObject jo = MainReflector.process(args[0], args[1], args[2]);
+        JsonObject jo = MainReflector.generate(args[0], args[1], args[2]);
         System.out.println(jo.encode());
     }
 }

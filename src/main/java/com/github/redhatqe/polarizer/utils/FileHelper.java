@@ -171,7 +171,7 @@ public class FileHelper implements IFileHelper {
     public static String readFile(String path) throws IOException {
         BufferedReader rdr = Files.newBufferedReader(Paths.get(path));
         String content = rdr.lines().reduce("", (acc, n) -> {
-            acc += n;
+            acc += n + "\n";
             return acc;
         });
         return content;

@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.xml.bind.annotation.XmlAccessOrder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -528,8 +529,7 @@ public class MetaProcessor {
     private static void writeBadFunctionText(List<String> badFunctions) {
         try {
             // FIXME: rotate the TestDefinitionProcess.errorsText
-            final String warnText = "/tmp/polarize-warnings.txt";
-            Path bf = Paths.get(warnText);
+            Path bf = FileHelper.makeTempPath("/tmp", "polarizer-warnings", "", null);
             StandardOpenOption opt = bf.toFile().exists() ? StandardOpenOption.APPEND : StandardOpenOption.CREATE;
             Files.write(bf, badFunctions, opt);
         } catch (IOException e) {
@@ -573,7 +573,7 @@ public class MetaProcessor {
                       Map<String, Map<String, IdParams>> mapFile,
                       File mapPath) {
         List<String> badFuncs = new ArrayList<>();
-        ProcessingInfo pi = pi = new ProcessingInfo("Unprocessed", meta);
+        ProcessingInfo pi = new ProcessingInfo("Unprocessed", meta);
 
         Optional<String> maybePolarionID = meta.getPolarionIDFromTestcase();
         Optional<String> maybeMapFileID =
@@ -643,6 +643,7 @@ public class MetaProcessor {
                 logger.error("Should not get here");
         }
         MetaProcessor.writeBadFunctionText(badFuncs);
+        pi.setNoIdFuncs(badFuncs);
 
         // If update bit is set, regenerate the XML file with the new data, however, check that xml file doesn't already
         // have the ID set.  If it does, add the ID to the tc.  Also, add to the mapping file
@@ -1009,6 +1010,22 @@ public class MetaProcessor {
         return jo;
     }
 
+    public static List<File>
+    generateXML(Map<String, List<Testcase>> testcaseMap,
+                TestCaseConfig config) {
+        String selName = config.getTestcase().getSelector().getName();
+        String selVal = config.getTestcase().getSelector().getValue();
+        List<File> xmlFiles = new ArrayList<>();
+        for(String project: testcaseMap.keySet()) {
+            File testXml = FileHelper.makeTempFile("/tmp", String.format("testcase-import-%s-", project),
+                    ".xml", null);
+            Testcases tests = new Testcases();
+            MetaProcessor.initTestcases(selName, selVal, project, testXml, testcaseMap, tests);
+            xmlFiles.add(testXml);
+        }
+        return xmlFiles;
+    }
+
     /**
      * Sends a TestCase import request for each project
      *
@@ -1054,7 +1071,8 @@ public class MetaProcessor {
         String selVal = config.getTestcase().getSelector().getValue();
         String selector = String.format( "%s='%s'", selName, selVal);
         for(String project: testcaseMap.keySet()) {
-            File testXml = FileHelper.makeTempFile("/tmp", "testcase-import", ".xml", null);
+            File testXml = FileHelper.makeTempFile("/tmp", String.format("testcase-import-%s-", project),
+                    ".xml", null);
             Testcases tests = new Testcases();
             Optional<MessageResult<DefaultResult>> on;
             if (!MetaProcessor.initTestcases(selName, selVal, project, testXml, testcaseMap, tests)
@@ -1062,16 +1080,16 @@ public class MetaProcessor {
                 maybeNodes.add(Optional.empty());
             else {
                 MessageHandler<DefaultResult> hdlr;
-                String projID = config.getProject();
                 hdlr = MetaProcessor
                         .testcaseImportHandler( methToProjectDef
-                                              , projID
+                                              , project
                                               , mapFile
                                               , mappingPath
                                               , config.getTestcase());
                 String url = config.getServers().get("polarion").getUrl() + config.getTestcase().getEndpoint();
                 CIBusListener<DefaultResult> cbl = new CIBusListener<>(hdlr, brokerCfg);
                 String address = String.format("Consumer.%s.%s", cbl.getClientID(), CIBusListener.TOPIC);
+                logger.info(String.format("CIBusListener topic = %s", address));
                 on = ImporterRequest.sendImportByTap( cbl
                                                     , url
                                                     , config.getServers().get("polarion").getDomain()
