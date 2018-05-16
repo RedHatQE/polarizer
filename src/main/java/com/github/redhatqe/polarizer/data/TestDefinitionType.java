@@ -35,6 +35,8 @@ public class TestDefinitionType implements TestDefinition {
     private String script;                // path or name of automation script/method
     @JsonProperty
     private TestTypeType testtype;
+    @JsonProperty
+    private Boolean importReady;
 
     // FIXME: In the TestCase importer, teststeps is actually just a string which seems wrong
     @JsonProperty
@@ -67,7 +69,6 @@ public class TestDefinitionType implements TestDefinition {
     public TestDefinitionType(TestDefinition td) {
         this.assignee = td.assignee();
         this.automation = td.automation();
-        this.component = td.component();
         this.description = td.description();
         this.importance = td.importance();
         this.initialEstimate = td.initialEstimate();
@@ -79,7 +80,6 @@ public class TestDefinitionType implements TestDefinition {
         this.projectIDs = Arrays.stream(td.projectID()).collect(Collectors.toList());
         this.script = td.script();
         this.setup = td.setup();
-        this.subcomponent = td.subcomponent();
         this.tags = td.tags();
         this.teardown = td.teardown();
         this.testCaseIDs = Arrays.stream(td.testCaseID()).collect(Collectors.toList());
@@ -268,6 +268,14 @@ public class TestDefinitionType implements TestDefinition {
         this.update = update;
     }
 
+    public Boolean getImportReady() {
+        return importReady;
+    }
+
+    public void setImportReady(Boolean importReady) {
+        this.importReady = importReady;
+    }
+
     @Override
     public DefTypes.Project[] projectID() {
         return new DefTypes.Project[0];
@@ -354,18 +362,13 @@ public class TestDefinitionType implements TestDefinition {
     }
 
     @Override
-    public String component() {
-        return this.component;
-    }
-
-    @Override
-    public String subcomponent() {
-        return this.subcomponent;
-    }
-
-    @Override
     public String upstream() {
         return this.upstream;
+    }
+
+    @Override
+    public boolean importReady() {
+        return false;
     }
 
     @Override

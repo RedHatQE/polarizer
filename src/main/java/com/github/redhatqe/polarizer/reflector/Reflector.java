@@ -40,12 +40,12 @@ public class Reflector {
     private static Logger logger = LogManager.getLogger(Reflector.class.getSimpleName());
     private Map<Testcase, Meta<TestDefinition>> testCaseToMeta = new HashMap<>();
     Map<String,
-               Map<String, IdParams>> mappingFile;
+        Map<String, IdParams>> mappingFile;
     private TestCaseConfig tcConfig;
     private BrokerConfig brokerConfig;
     private Map<String, List<Testcase>> tcMap = new HashMap<>();
     Map<String,
-               Map<String, Meta<TestDefinition>>> methToProjectDef;
+        Map<String, Meta<TestDefinition>>> methToProjectDef;
     private Map<String, String> methodToDesc = new HashMap<>();
     File mapPath;
     private List<ProcessingInfo> results;
@@ -310,13 +310,20 @@ public class Reflector {
     }
 
     Map<String, Map<String, Meta<TestDefinition>>> makeMethToProjectMeta() {
-        Map<String, Map<String, Meta<TestDefinition>>> methToProjectMeta = new HashMap<>();
+        Map<String, Map<String, Meta<TestDefinition>>> methToProjectMeta = new TreeMap<>();
         for(Meta<TestDefinition> meta: this.testDefs) {
             String qual = meta.qualifiedName;
             String project = meta.project;
-            Map<String, Meta<TestDefinition>> projToMeta = new HashMap<>();
-            projToMeta.put(project, meta);
-            methToProjectMeta.put(qual, projToMeta);
+            Map<String, Meta<TestDefinition>> projToMeta;
+            if (methToProjectMeta.containsKey(qual)) {
+                projToMeta = methToProjectMeta.get(qual);
+                projToMeta.put(project, meta);
+            }
+            else {
+                projToMeta = new HashMap<>();
+                projToMeta.put(project, meta);
+                methToProjectMeta.put(qual, projToMeta);
+            }
         }
         return methToProjectMeta;
     }

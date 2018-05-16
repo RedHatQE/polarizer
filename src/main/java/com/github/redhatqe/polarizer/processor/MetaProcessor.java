@@ -27,7 +27,6 @@ import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.xml.bind.annotation.XmlAccessOrder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -77,12 +76,6 @@ public class MetaProcessor {
                 case TEARDOWN:
                     supp.accept(TEARDOWN.stringify(), def.teardown());
                     break;
-                case COMPONENT:
-                    supp.accept(COMPONENT.stringify(), def.component());
-                    break;
-                case SUBCOMPONENT:
-                    supp.accept(SUBCOMPONENT.stringify(), def.subcomponent());
-                    break;
                 case AUTOMATION_SCRIPT:
                     supp.accept(AUTOMATION_SCRIPT.stringify(), def.script());
                     break;
@@ -96,7 +89,7 @@ public class MetaProcessor {
                     supp.accept(SUBTYPE2.stringify(), def.testtype().subtype2().toString());
                     break;
                 default:
-                    logger.warn(String.format("Unknown enum value: %s", key.toString()));
+                    break;
             }
         };
     }
@@ -581,6 +574,7 @@ public class MetaProcessor {
         String annId = maybePolarionID.orElse("");
         String mapId = maybeMapFileID.orElse("");
         int importType = meta.annotation.update() ? 1 << 1 : 0;
+        boolean addToImport = meta.annotation.importReady();
 
         // w00t, bit tricks.  Thought I wouldn't need these again after my embedded days :)
         int idval = (annId.equals("") ? 0 : 1 << 1) | (mapId.equals("") ? 0 : 1);
@@ -642,7 +636,7 @@ public class MetaProcessor {
             default:
                 logger.error("Should not get here");
         }
-        MetaProcessor.writeBadFunctionText(badFuncs);
+        // MetaProcessor.writeBadFunctionText(badFuncs);
         pi.setNoIdFuncs(badFuncs);
 
         // If update bit is set, regenerate the XML file with the new data, however, check that xml file doesn't already
@@ -654,12 +648,13 @@ public class MetaProcessor {
             }
             if (!idtouse.equals("")) {
                 MetaProcessor.setPolarionIDInMapFile(meta, idtouse, mapFile);
-                //createMappingFile(mapPath, methToPD, mapFile);
             }
         }
 
         // At this point, make sure that the number of args in the method is how many we have in the mapping file.
         checkParameterMismatch(meta, mapFile, idtype);
+        if (!addToImport)
+            importType = 0;
 
         return new Tuple3<>(importType, mapIsEdited, pi);
     }
@@ -704,6 +699,13 @@ public class MetaProcessor {
             rprop.setValue(selectorValue);
             props.add(rprop);
         }
+        // Lowercase the role
+        tests.getTestcase()
+            .forEach(tc -> tc.getLinkedWorkItems().getLinkedWorkItem()
+                .forEach(li -> {
+                    String role = li.getRoleId().toLowerCase();
+                    li.setRoleId(role);
+                }));
 
         JAXBHelper jaxb = new JAXBHelper();
         IJAXBHelper.marshaller(tests, testcaseXml, jaxb.getXSDFromResource(Testcases.class));
@@ -894,8 +896,8 @@ public class MetaProcessor {
                 result.setStatus(MessageResult.Status.NO_MESSAGE);
                 return result;
             }
+            result.setStatus(MessageResult.Status.SUCCESS);
             JsonNode root = node.get("root");
-            ObjectMapper mapper = new ObjectMapper();
             if (root.has("status")) {
                 if (root.get("status").textValue().equals("failed")) {
                     result.setStatus(MessageResult.Status.FAILED);
@@ -906,7 +908,7 @@ public class MetaProcessor {
 
             JsonNode testcases = root.get("import-testcases");
             logger.info(testcases.asText());
-            TestCaseImportResult tcResult = mapper.convertValue(root, TestCaseImportResult.class);
+
             result.setNode(node);
             String pf = tt.getPrefix();
             String sf = tt.getSuffix();
@@ -970,19 +972,19 @@ public class MetaProcessor {
         SortedSet<String> ordered = new TreeSet<>(difference);
 
         List<UpdateAnnotation> updateAnnotation = atTD.entrySet().stream()
-                .flatMap(es -> {
-                    String methname = es.getKey();
-                    return es.getValue().entrySet().stream()
-                            .map(es2 -> {
-                                String project = es2.getKey();
-                                Meta<TestDefinition> meta = es2.getValue();
-                                return new UpdateAnnotation(methname, project, meta.annotation.update());
-                            })
-                            .collect(Collectors.toList())
-                            .stream();
-                })
-                .filter(na -> na.update)
-                .collect(Collectors.toList());
+            .flatMap(es -> {
+                String methname = es.getKey();
+                return es.getValue().entrySet().stream()
+                    .map(es2 -> {
+                        String project = es2.getKey();
+                        Meta<TestDefinition> meta = es2.getValue();
+                        return new UpdateAnnotation(methname, project, meta.annotation.update());
+                    })
+                    .collect(Collectors.toList())
+                    .stream();
+            })
+            .filter(na -> na.update)
+            .collect(Collectors.toList());
         return new Tuple<>(ordered, updateAnnotation);
     }
 

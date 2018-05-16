@@ -1,10 +1,12 @@
 package com.github.redhatqe.polarizer.reflector;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.redhatqe.polarize.metadata.TestDefAdapter;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarizer.data.TestCaseNeedingImport;
 import com.github.redhatqe.polarizer.messagebus.DefaultResult;
 import com.github.redhatqe.polarizer.messagebus.config.BrokerConfig;
+import com.github.redhatqe.polarizer.reporter.IdParams;
 import com.github.redhatqe.polarizer.reporter.configuration.Serializer;
 import com.github.redhatqe.polarizer.reporter.configuration.data.TestCaseConfig;
 import com.github.redhatqe.polarizer.messagebus.MessageResult;
@@ -169,6 +171,14 @@ public class MainReflector implements IJarHelper {
                 .collect(Collectors.toSet());
     }
 
+    public static Set<String> getImportNotReadyTests(List<Meta<TestDefinition>> anns) {
+        return anns.stream()
+                .filter(a -> !a.annotation.importReady())
+                .map(a -> a.qualifiedName)
+                .collect(Collectors.toSet());
+    }
+
+
     public static Reflector reflect(String jarPath, String tcCfgPath, String mappingPath) throws IOException {
         MainReflector jh = new MainReflector(jarPath, tcCfgPath, mappingPath);
         TestCaseConfig req = jh.tcConfig;
@@ -248,28 +258,50 @@ public class MainReflector implements IJarHelper {
 
         // Determine which methods still need to be imported to polarion, which test methods are being used by TestNG
         // but don't have an @TestDefinition, and which methods have update=true in the annotation
+        Set<String> importNotReady = MainReflector.getImportNotReadyTests(refl.testDefs);
         Set<String> enabledTests = MainReflector.getEnabledTests(refl.methods);
         Tuple<SortedSet<String>, List<MetaProcessor.UpdateAnnotation>> audit =
                 MetaProcessor.auditMethods(enabledTests, refl.methToProjectDef);
 
         JsonObject jo = MetaProcessor.writeAuditJson(null, audit);
+
         importResults.forEach(o -> o.ifPresent(mr -> {
+            // Add the POST response body
+            jo.put("post-body", mr.getBody());
+            mr.getNode().ifPresent(n -> {
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                    Object text = mapper.treeToValue(n, Object.class);
+                    jo.put("message", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(text));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             jo.put("import-status", mr.getStatus().toString());
             String err = mr.getErrorDetails();
             try {
                 TestCaseNeedingImport needs = Serializer.fromJson(TestCaseNeedingImport.class, err);
                 jo.put("methods-needing-import", needs != null ? needs.getTitles() : "");
             } catch (IOException e) {
-                e.printStackTrace();
+                jo.put("methods-needing-import", new ArrayList<String>());
             }
         }));
         // Add any of the no-ids-funcs
-        Map<String, List<String>> noIds = new HashMap<>();
+        List<String> ids = new ArrayList<>();
         refl.getResults().forEach(pi -> {
-            noIds.put(pi.getMeta().project, pi.getNoIdFuncs());
+            pi.getNoIdFuncs().stream()
+                    .filter(ni -> !ni.equals(""))
+                    .peek(System.out::println)
+                    .forEach(ids::add);
         });
-        jo.put("mapping", refl.mappingFile);
-        jo.put("no-id-funcs", noIds);
+        jo.put("methods-missing-testCaseID", ids);
+        // Add tests which have importReady=false
+        jo.put("methods-not-ready-for-import", new ArrayList<>(importNotReady));
+        // Add the mapping.json to the returned JSON
+        Map<String, Map<String, IdParams>> sortedMapping = new TreeMap<>(refl.mappingFile);
+        jo.put("mapping", sortedMapping);
+
+
         return jo;
     }
 
@@ -299,7 +331,7 @@ public class MainReflector implements IJarHelper {
     // arg[2] mappath
     public static void main(String[] args) throws IOException {
         //JsonObject jo = MainReflector.process(args[0], args[1], args[2]);
-        JsonObject jo = MainReflector.generate(args[0], args[1], args[2]);
-        System.out.println(jo.encode());
+        JsonObject jo = MainReflector.process(args[0], args[1], args[2]);
+        System.out.println(jo.encodePrettily());
     }
 }
