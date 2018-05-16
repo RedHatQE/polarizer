@@ -582,8 +582,8 @@ public class MetaProcessor {
         if (idtype == null)
             throw new MappingError("Error in IDType.fromNumber()");
 
-        // format: {0} method, {1} projectID, {2} ann or map {3} ID {4} ann or map
-        String msg = "- %s for project %s: the ID=\"\" in the %s but is %s in the %s.";
+        // format: {0} projectID, {1} method, {2} ann or map {3} ID {4} ann or map
+        String msg = "%s: %s: the ID='' in the %s but is %s in the %s.";
         String qual = meta.qualifiedName;
         String project = meta.project;
         String pqual = meta.project + " -> " + qual;
@@ -607,13 +607,13 @@ public class MetaProcessor {
             case ANN:
                 logger.info(String.format(m, meta.qualifiedName, meta.project, annId));
                 addToMapFile(mapFile, meta, annId, mapPath);
-                badFuncs.add(String.format(msg, qual, project, "mapping", annId, "annotation"));
+                badFuncs.add(String.format(msg, project, qual, "mapping", annId, "annotation"));
                 pi.setMessage(m);
                 break;
             case MAP:
                 m = "MAP: ID exists in the mapping file, but not in the annotation";
                 logger.info(String.format(m, meta.qualifiedName, meta.project, annId));
-                badFuncs.add(String.format(msg, qual, project, "annotation", mapId, "mapping"));
+                badFuncs.add(String.format(msg, project, qual, "annotation", mapId, "mapping"));
                 pi.setMessage(m);
                 pi.getMeta().polarionID = mapId;
                 break;
@@ -998,7 +998,7 @@ public class MetaProcessor {
         List<String> updateMsg = updates.stream()
                 .map(UpdateAnnotation::toString)
                 .collect(Collectors.toList());
-        jo.put("needs-testdefinition", new JsonArray(new ArrayList<>(difference)));
+        jo.put("methods-needing-TestDefinition", new JsonArray(new ArrayList<>(difference)));
         JsonArray ja = new JsonArray(updateMsg);
         jo.put("update-is-true", ja);
         return jo;
