@@ -1003,7 +1003,7 @@ public class MetaProcessor {
                 .collect(Collectors.toList());
         jo.put("methods-needing-TestDefinition", new JsonArray(new ArrayList<>(difference)));
         JsonArray ja = new JsonArray(updateMsg);
-        jo.put("update-is-true", ja);
+        jo.put("methods-with-update-is-true", ja);
         return jo;
     }
 
