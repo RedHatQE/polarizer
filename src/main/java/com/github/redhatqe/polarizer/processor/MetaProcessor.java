@@ -701,11 +701,14 @@ public class MetaProcessor {
         }
         // Lowercase the role
         tests.getTestcase()
-            .forEach(tc -> tc.getLinkedWorkItems().getLinkedWorkItem()
-                .forEach(li -> {
-                    String role = li.getRoleId().toLowerCase();
-                    li.setRoleId(role);
-                }));
+            .forEach(tc -> {
+                if (tc.getLinkedWorkItems() != null)
+                    tc.getLinkedWorkItems().getLinkedWorkItem()
+                            .forEach(li -> {
+                                String role = li.getRoleId().toLowerCase();
+                                li.setRoleId(role);
+                            });
+            });
 
         JAXBHelper jaxb = new JAXBHelper();
         IJAXBHelper.marshaller(tests, testcaseXml, jaxb.getXSDFromResource(Testcases.class));
