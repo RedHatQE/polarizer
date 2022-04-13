@@ -9,8 +9,8 @@ import com.github.redhatqe.polarizer.reporter.importer.testcase.Parameter;
 import com.github.redhatqe.polarizer.reporter.importer.testcase.Testcase;
 import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -30,7 +30,7 @@ public class Meta<T> {
     public T annotation;
     public List<Parameter> params = null;
     public String polarionID = "";
-    public static final Logger logger = LogManager.getLogger(Meta.class.getSimpleName());
+    public static final Logger logger = LoggerFactory.getLogger(Meta.class.getSimpleName());
     public Boolean dirty = false;
 
     public Meta() {

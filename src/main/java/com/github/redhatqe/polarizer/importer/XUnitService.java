@@ -19,8 +19,8 @@ import com.github.redhatqe.polarizer.reporter.utils.Tuple;
 import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.JsonHelper;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,7 +40,7 @@ import static com.github.redhatqe.polarizer.reporter.configuration.Serializer.fr
  * file, this file will be loaded instead.
  */
 public class XUnitService {
-    private final static Logger logger = LogManager.getLogger(XUnitService.class);
+    private final static Logger logger = LoggerFactory.getLogger(XUnitService.class);
     public static String configPath = System.getProperty("polarize.config");
     public File cfgFile = null;
     private XUnitConfig config;

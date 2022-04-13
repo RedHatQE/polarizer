@@ -18,8 +18,8 @@ import com.github.redhatqe.polarizer.processor.MetaProcessor;
 import com.github.redhatqe.polarizer.reporter.IdParams;
 import com.github.redhatqe.polarizer.utils.FileHelper;
 import com.github.redhatqe.polarizer.utils.Tuple;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -37,7 +37,7 @@ public class Reflector {
     List<Meta<TestDefinition>> testDefs;
     List<Meta<TestDefAdapter>> testDefAdapters;
     private Set<String> testTypes;
-    private static Logger logger = LogManager.getLogger(Reflector.class.getSimpleName());
+    private static Logger logger = LoggerFactory.getLogger(Reflector.class.getSimpleName());
     private Map<Testcase, Meta<TestDefinition>> testCaseToMeta = new HashMap<>();
     Map<String,
         Map<String, IdParams>> mappingFile;

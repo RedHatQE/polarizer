@@ -1,7 +1,6 @@
 package com.github.redhatqe.polarizer.utils;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,7 +16,7 @@ import java.util.Set;
  * Otherwise, the first element of the Tuple is Optional.of(T args[0]), and the second is Optional.of(T[] args[1..n])
  */
 public class ArgHelper {
-    public static Logger logger = LogManager.getLogger("byzantine.ArgHelper");
+    public static Logger logger = LoggerFactory.getLogger("polarizer.ArgHelper");
     public static <T> Tuple<Optional<T>, Optional<T[]>> headAndTail(T[] args) {
         Tuple<Optional<T>, Optional<T[]>> res;
         if (args == null || args.length == 0) { // null array or empty array
@@ -61,7 +60,7 @@ public class ArgHelper {
         Integer[] argsI = {10, 2, 3, 4, 5};
         Tuple<Optional<Integer>, Optional<Integer[]>> hti = ArgHelper.headAndTail(argsI);
         Integer i = hti.first.orElseThrow(() -> new Error("Should be 10"));
-        hti.second.ifPresent(sec -> ArgHelper.headAndTail(sec).first.ifPresent(t -> logger.info(t)));
-        logger.info(i);
+        hti.second.ifPresent(sec -> ArgHelper.headAndTail(sec).first.ifPresent(t -> logger.info(t.toString())));
+        logger.info(i.toString());
     }
 }

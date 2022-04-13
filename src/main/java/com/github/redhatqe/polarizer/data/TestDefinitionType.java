@@ -232,16 +232,24 @@ public class TestDefinitionType implements TestDefinition {
         return component;
     }
 
+    public String component() {
+        return component;
+    }
+    
     public void setComponent(String component) {
         this.component = component;
     }
 
+    public String subcomponent(){
+	return subcomponent;
+    };
+    
     public String getSubcomponent() {
-        return subcomponent;
+         return subcomponent;
     }
 
     public void setSubcomponent(String subcomponent) {
-        this.subcomponent = subcomponent;
+         this.subcomponent = subcomponent;
     }
 
     public String getUpstream() {

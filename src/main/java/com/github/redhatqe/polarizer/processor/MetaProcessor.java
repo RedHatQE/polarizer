@@ -24,8 +24,9 @@ import com.github.redhatqe.polarizer.reporter.IdParams;
 import com.github.redhatqe.polarizer.utils.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
 import static com.github.redhatqe.polarize.metadata.DefTypes.Custom.*;
 
 public class MetaProcessor {
-    public static Logger logger = LogManager.getLogger(MetaProcessor.class.getSimpleName());
+    public static Logger logger = LoggerFactory.getLogger(MetaProcessor.class.getSimpleName());
     public static JAXBHelper jaxb = new JAXBHelper();
 
     /**

@@ -24,8 +24,8 @@ import org.apache.http.impl.client.*;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 
 
 public class ImporterRequest {
-    private static Logger logger = LogManager.getLogger(ImporterRequest.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(ImporterRequest.class.getName());
 
     /**
      * Marshalls t of Type T into xml file and uses this generated xml for an importer request
