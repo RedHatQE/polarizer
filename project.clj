@@ -20,5 +20,6 @@
     	[com.github.redhatqe/polarize-metadata   "0.1.1-SNAPSHOT"]
     	[com.github.redhatqe/polarizer-reporter "0.3.0-SNAPSHOT"]
     	[com.github.redhatqe/polarizer-umb      "0.3.0-SNAPSHOT"]
+        [com.github.redhatqe/polarize           "0.8.3-SNAPSHOT"]
   ]
   :plugins [[lein2-eclipse "2.0.0"]])
