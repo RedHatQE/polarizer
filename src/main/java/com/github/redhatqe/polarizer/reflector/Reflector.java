@@ -126,7 +126,8 @@ public class Reflector {
         DefTypes.Project[] projects = ann.projectID();
         String[] polarionIDs = ann.testCaseID();
         if (polarionIDs.length > 0 && polarionIDs.length != projects.length)
-            logger.error("Length of projects and polarionIds not the same");
+            //logger.error("Length of projects and polarionIds not the same");
+            logger.error("Length of projects ("+projects.length+") and polarionIds ("+polarionIDs.length+") not the same for '"+qual+"'");
 
         if (className.contains(".")) {
             String[] split = className.split("\\.");
